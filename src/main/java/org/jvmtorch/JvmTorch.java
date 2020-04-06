@@ -13,7 +13,7 @@
  */
 package org.jvmtorch;
 
-import org.jvmtorch.impl.dummy.DummyJvmTorch;
+import org.jvmtorch.impl.ml4j.ML4JJvmTorch;
 
 /**
  * Entry point for JvmTorch functionality from Java code.
@@ -39,5 +39,5 @@ import org.jvmtorch.impl.dummy.DummyJvmTorch;
  * 
  * @author Michael Lavelle
  */
-public class JvmTorch extends DummyJvmTorch {
+public class JvmTorch extends ML4JJvmTorch {
 }
