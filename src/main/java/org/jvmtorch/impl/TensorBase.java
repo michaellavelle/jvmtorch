@@ -498,7 +498,7 @@ public class TensorBase extends PythonClass<Tensor> implements Tensor {
 
 	@Override
 	public Tensor requires_grad_(boolean requires_grad) {
-		this.requires_grad = true;
+		this.requires_grad = requires_grad;
 		return this;
 	}
 	
