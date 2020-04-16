@@ -200,4 +200,24 @@ public class TensorAdapter implements Tensor {
 	public Tensor view(Size size) {
 		return adapted.view(size);
 	}
+
+	@Override
+	public Tensor sub(float value) {
+		return adapted.sub(value);
+	}
+
+	@Override
+	public Tensor sub(Tensor other) {
+		return adapted.sub(other);
+	}
+	
+	@Override
+	public Tensor div(Tensor other) {
+		return adapted.div(other);
+	}
+
+	@Override
+	public Tensor sum() {
+		return adapted.sum();
+	}
 }

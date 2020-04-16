@@ -31,11 +31,13 @@ import org.jvmpy.symbolictensors.SymbolicTensor;
 import org.jvmtorch.impl.operations.tensorscalar.DifferentiableTensorScalarFunction;
 import org.jvmtorch.impl.operations.tensorscalar.ScalarAddition;
 import org.jvmtorch.impl.operations.tensorscalar.ScalarMultiplication;
+import org.jvmtorch.impl.operations.tensorscalar.ScalarSubtraction;
 import org.jvmtorch.impl.operations.tensorscalar.TensorScalarImpl;
 import org.jvmtorch.impl.operations.tensortensor.DifferentiableTensorTensorFunction;
 import org.jvmtorch.impl.operations.tensortensor.TensorAddition;
 import org.jvmtorch.impl.operations.tensortensor.TensorMatrixMultiplication;
 import org.jvmtorch.impl.operations.tensortensor.TensorMultiplication;
+import org.jvmtorch.impl.operations.tensortensor.TensorSubtraction;
 import org.jvmtorch.torch.GradFunction;
 import org.jvmtorch.torch.Size;
 import org.jvmtorch.torch.Tensor;
@@ -195,6 +197,11 @@ public class TensorBase extends PythonClass<Tensor> implements Tensor {
 	}
 	
 	@Override
+	public Tensor sub(float value) {
+		return applyScalarOperation(new ScalarSubtraction<>(), value);
+	}
+	
+	@Override
 	public Tensor mul(Tensor other) {
 		return applyTensorOperation(new TensorMultiplication<>(torch), other);
 	}
@@ -202,6 +209,16 @@ public class TensorBase extends PythonClass<Tensor> implements Tensor {
 	@Override
 	public Tensor add(Tensor other) {
 		return applyTensorOperation(new TensorAddition<>(torch), other);
+	}
+	
+	@Override
+	public Tensor div(Tensor other) {
+		return applyTensorOperation(new TensorAddition<>(torch), other);
+	}
+	
+	@Override
+	public Tensor sub(Tensor other) {
+		return applyTensorOperation(new TensorSubtraction<>(torch), other);
 	}
 	
 	@Override
@@ -238,7 +255,14 @@ public class TensorBase extends PythonClass<Tensor> implements Tensor {
 	public Tensor mean() {
 		// TODO backward
 		return toTensor(symbolicTensor
-				.performUnaryMappingOperation("Mean", new TensorOperationImpl<>(torch, "Mean", t -> t.mean(), s -> torch.Size(1, 1))), "MeanBackward", new TensorOperationImpl<>(torch, "MeanBackward", g -> g.mul(1f / numel()), s -> size()));
+				.performUnaryMappingOperation("Mean", new TensorOperationImpl<>(torch, "Mean", t -> t.mean(), s -> torch.Size(1, 1))), "MeanBackward", new TensorOperationImpl<>(torch, "MeanBackward", g -> g.mul(torch.ones(size())).mul(1f / numel()), s -> size()));
+	}
+	
+	@Override
+	public Tensor sum() {
+		// TODO backward
+		return toTensor(symbolicTensor
+				.performUnaryMappingOperation("Sum", new TensorOperationImpl<>(torch, "Sum", t -> t.sum(), s -> torch.Size(1, 1))), "SumBackward", new TensorOperationImpl<>(torch, "SumBackward", g -> g.mul(torch.ones(size())), s -> size()));
 	}
 	
 

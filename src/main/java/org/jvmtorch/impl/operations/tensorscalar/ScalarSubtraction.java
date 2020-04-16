@@ -11,56 +11,25 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.jvmtorch.torch;
+package org.jvmtorch.impl.operations.tensorscalar;
 
+import java.util.function.UnaryOperator;
 
-import java.util.function.Supplier;
+import org.jvmtorch.torch.TensorOperations;
 
-import org.jvmpy.symbolictensors.TensorDataContainer;
+public class ScalarSubtraction<T extends TensorOperations<T>> implements DifferentiableTensorScalarFunction<T> {
 
-public interface TensorOperations<T> extends Supplier<T>, TensorDataContainer {
-
-	T mul(float value);
-
-	T add(float value);
+	@Override
+	public String name() {
+		return "Sub";
+	}
 	
-	T sub(float value);
-
-
-	T mul(T other);
+	public <S extends TensorOperations<S>> UnaryOperator<S> forwardPropFunction(float scalar) {
+		return t -> t.sub(scalar);
+	}
 	
-	
-	T div(T other);
-
-	
-	T sub(T other);
-
-	int numel();
-	
-	T sum();
-
-	T add(T other);
-
-	T mean();
-
-	T mul_(T other);
-
-	T sub_(T other);
-
-	T add_(T other);
-
-	T matmul(T other);
-
-	T t();
-
-	Size size();
-	
-	T size_(Size size);
-	
-	
-	T view(int i, int j);
-	
-	T view(Size size);
-
+	public <S extends TensorOperations<S>> UnaryOperator<S> backPropFunction(TensorScalar<S> variables) {
+		return g -> g;
+	}
 
 }

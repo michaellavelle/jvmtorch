@@ -67,10 +67,20 @@ public class TensorDataAdapter<A extends TensorOperations<A>> implements TensorD
 	public TensorData add(float value) {
 		return createTensorDataFromTensorOperations(adapted.add(value));
 	}
+	
+	@Override
+	public TensorData sub(float value) {
+		return createTensorDataFromTensorOperations(adapted.sub(value));
+	}
 
 	@Override
 	public TensorData mul(TensorData other) {
 		return createTensorDataFromTensorOperations(adapted.mul(createTensorOperationsFromTensorData(other)));
+	}
+	
+	@Override
+	public TensorData div(TensorData other) {
+		return createTensorDataFromTensorOperations(adapted.div(createTensorOperationsFromTensorData(other)));
 	}
 
 	@Override
@@ -82,10 +92,20 @@ public class TensorDataAdapter<A extends TensorOperations<A>> implements TensorD
 	public TensorData add(TensorData other) {
 		return createTensorDataFromTensorOperations(adapted.add(createTensorOperationsFromTensorData(other)));
 	}
+	
+	@Override
+	public TensorData sub(TensorData other) {
+		return createTensorDataFromTensorOperations(adapted.sub(createTensorOperationsFromTensorData(other)));
+	}
 
 	@Override
 	public TensorData mean() {
 		return createTensorDataFromTensorOperations(adapted.mean());
+	}
+	
+	@Override
+	public TensorData sum() {
+		return createTensorDataFromTensorOperations(adapted.sum());
 	}
 
 	@Override

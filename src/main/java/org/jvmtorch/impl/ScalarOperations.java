@@ -41,6 +41,10 @@ public class ScalarOperations implements TensorOperations<ScalarOperations> {
 	public ScalarOperations mul(float otherValue) {
 		return new ScalarOperations(torch, value * otherValue);
 	}
+	
+	public ScalarOperations div(float otherValue) {
+		return new ScalarOperations(torch, value / otherValue);
+	}
 
 	@Override
 	public ScalarOperations add(float otherValue) {
@@ -51,6 +55,11 @@ public class ScalarOperations implements TensorOperations<ScalarOperations> {
 	public ScalarOperations mul(ScalarOperations other) {
 		return mul(other.value);
 	}
+	
+	@Override
+	public ScalarOperations div(ScalarOperations other) {
+		return div(other.value);
+	}
 
 	@Override
 	public int numel() {
@@ -60,6 +69,16 @@ public class ScalarOperations implements TensorOperations<ScalarOperations> {
 	@Override
 	public ScalarOperations add(ScalarOperations other) {
 		return add(other.value);
+	}
+	
+	@Override
+	public ScalarOperations sub(float otherValue) {
+		return new ScalarOperations(torch, value - otherValue);
+	}
+
+	@Override
+	public ScalarOperations sub(ScalarOperations other) {
+		return sub(other.value);
 	}
 
 	@Override
@@ -87,7 +106,7 @@ public class ScalarOperations implements TensorOperations<ScalarOperations> {
 
 	@Override
 	public ScalarOperations matmul(ScalarOperations other) {
-		return null;
+		throw new UnsupportedOperationException("Not yet implemented");
 	}
 
 	@Override
@@ -119,5 +138,12 @@ public class ScalarOperations implements TensorOperations<ScalarOperations> {
 	public String toString() {
 		return Float.valueOf(value).toString();
 	}
+
+	@Override
+	public ScalarOperations sum() {
+		return new ScalarOperations(torch, value);
+	}
+
+	
 
 }

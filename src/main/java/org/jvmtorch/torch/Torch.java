@@ -26,6 +26,15 @@ public interface Torch {
 	 */
 	Tensor randn(Size size);
 	
+
+	/**
+	 * Create a new normally distributed random Tensor.
+	 * 
+	 * @param dimensions The dimensions of the tensor.
+	 * @return a new normally distributed random Tensor.
+	 */
+	Tensor randn(int... dimensions);
+	
 	/**
 	 * Create a new uniformly distributed random Tensor.
 	 * 
@@ -35,11 +44,26 @@ public interface Torch {
 	Tensor rand(Size size);
 	
 	/**
+	 * Create a new uniformly distributed random Tensor.
+	 * 
+	 * @param dimensions The dimensions of the tensor.
+	 * @return a new uniformly distributed random Tensor.
+	 */
+	Tensor rand(int... dimensions);
+	
+	/**
 	 * Create a new uninitialised Tensor.
 	 * @param size The size of the tensor.
 	 * @return a new uninitialised Tensor.
 	 */
 	Tensor empty(Size size);
+	
+	/**
+	 * Create a new uninitialised Tensor.
+	 * @param dimensions The dimensions of the tensor.
+	 * @return a new uninitialised Tensor.
+	 */
+	Tensor empty(int... dimensions);
 	
 	/**
 	 * Create a new Tensor of zeros.
@@ -49,12 +73,27 @@ public interface Torch {
 	Tensor zeros(Size size);
 	
 	/**
+	 * Create a new Tensor of zeros.
+	 * @param dimensions The size of the tensor.
+	 * @return a new Tensor of zeros.
+	 */
+	Tensor zeros(int... dimensions);
+	
+	/**
 	 * Create a new Tensor of ones.
      *
 	 * @param size The size of the tensor.
 	 * @return a new Tensor of ones.
 	 */
 	Tensor ones(Size size);
+	
+	/**
+	 * Create a new Tensor of ones.
+     *
+	 * @param dimensions The size of the tensor.
+	 * @return a new Tensor of ones.
+	 */
+	Tensor ones(int... dimensions);
 	
 	/**
 	 * Create a new Tensor from the provided size
@@ -66,6 +105,17 @@ public interface Torch {
 	 * and data.
 	 */
 	Tensor tensor(float[] data, Size size);
+	
+	/**
+	 * Create a new Tensor from the provided size
+	 * and data.
+	 * 
+	 * @param data The data within the tensor.
+	 * @param dimensions The dimensions of the tensor.
+	 * @return a new Tensor from the provided size
+	 * and data.
+	 */
+	Tensor tensor(float[] data, int... dimensions);
 	
 	/**
 	 * Create a new scalar Tensor from the 
@@ -118,4 +168,14 @@ public interface Torch {
 	default Size Size(Size... sizes) {
 		return new Size(sizes);
 	}
+	
+	Tensor add(Tensor first, Tensor second);
+	
+	Tensor add(Tensor first, float value);
+
+	Tensor mul(Tensor first, Tensor second);
+	
+	Tensor mul(Tensor first, float value);
+
+
 }

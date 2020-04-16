@@ -82,6 +82,11 @@ public class ML4JTensorOperationsImpl implements ML4JTensorOperations, Operatabl
 	public ML4JTensorOperations add(float value) {
 		return toML4JTensorOperations(matrix.add(value), size);
 	}
+	
+	@Override
+	public ML4JTensorOperations sub(float value) {
+		return toML4JTensorOperations(matrix.sub(value), size);
+	}
 
 	@Override
 	public ML4JTensorOperations sub_(ML4JTensorOperations mul) {
@@ -131,6 +136,41 @@ public class ML4JTensorOperationsImpl implements ML4JTensorOperations, Operatabl
 
 		} else {
 			return toML4JTensorOperations(matrix.add(other.getMatrix()), size);
+		}
+
+	}
+	
+	@Override
+	public ML4JTensorOperations div(ML4JTensorOperations other) {
+			
+	
+		
+		if (requiresSecondMatrixColumnBroadcast(matrix, other.getMatrix())) {
+			return toML4JTensorOperations(matrix.divColumnVector(other.getMatrix()), size);
+
+		} else if ( requiresSecondMatrixRowsBroadcast(matrix, other.getMatrix())) {
+			return toML4JTensorOperations(matrix.divRowVector(other.getMatrix()), size);
+
+		} else {
+			return toML4JTensorOperations(matrix.div(other.getMatrix()), size);
+		}
+
+	}
+	
+
+	@Override
+	public ML4JTensorOperations sub(ML4JTensorOperations other) {
+			
+	
+		
+		if (requiresSecondMatrixColumnBroadcast(matrix, other.getMatrix())) {
+			return toML4JTensorOperations(matrix.subColumnVector(other.getMatrix()), size);
+
+		} else if ( requiresSecondMatrixRowsBroadcast(matrix, other.getMatrix())) {
+			return toML4JTensorOperations(matrix.subRowVector(other.getMatrix()), size);
+
+		} else {
+			return toML4JTensorOperations(matrix.sub(other.getMatrix()), size);
 		}
 
 	}
@@ -281,6 +321,11 @@ public class ML4JTensorOperationsImpl implements ML4JTensorOperations, Operatabl
 	@Override
 	public ML4JTensorOperations mean() {
 		return toML4JTensorOperations(matrixFactory.createOnes(1, 1).mul(matrix.sum() / matrix.getLength()), torch.Size(1, 1));
+	}
+	
+	@Override
+	public ML4JTensorOperations sum() {
+		return toML4JTensorOperations(matrixFactory.createOnes(1, 1).mul(matrix.sum()), torch.Size(1, 1));
 	}
 
 	@Override
