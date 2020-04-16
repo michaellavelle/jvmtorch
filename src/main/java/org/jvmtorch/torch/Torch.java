@@ -13,16 +13,109 @@
  */
 package org.jvmtorch.torch;
 
-public interface Torch<T extends TensorOperations<T>> {
+
+public interface Torch {
 
 	public static int LONG = 1;
 	
-	Tensor<T> empty(int i, int j);
-	Tensor<T> zeros(int i, int j);
-	Tensor<T> ones(int i, int j);
-	Tensor<T> randn(int i, int j, int k, int l);
-	Tensor<T> randn(int i, int j);
-	Tensor<T> rand(int i, int j);
-	Tensor<T> randn(int i);
-	Tensor<T> randn(int... sizes);
+	/**
+	 * Create a new normally distributed random Tensor.
+	 * 
+	 * @param size The size of the tensor.
+	 * @return a new normally distributed random Tensor.
+	 */
+	Tensor randn(Size size);
+	
+	/**
+	 * Create a new uniformly distributed random Tensor.
+	 * 
+	 * @param size The size of the tensor.
+	 * @return a new uniformly distributed random Tensor.
+	 */
+	Tensor rand(Size size);
+	
+	/**
+	 * Create a new uninitialised Tensor.
+	 * @param size The size of the tensor.
+	 * @return a new uninitialised Tensor.
+	 */
+	Tensor empty(Size size);
+	
+	/**
+	 * Create a new Tensor of zeros.
+	 * @param size The size of the tensor.
+	 * @return a new Tensor of zeros.
+	 */
+	Tensor zeros(Size size);
+	
+	/**
+	 * Create a new Tensor of ones.
+     *
+	 * @param size The size of the tensor.
+	 * @return a new Tensor of ones.
+	 */
+	Tensor ones(Size size);
+	
+	/**
+	 * Create a new Tensor from the provided size
+	 * and data.
+	 * 
+	 * @param data The data within the tensor.
+	 * @param size The size of the tensor.
+	 * @return a new Tensor from the provided size
+	 * and data.
+	 */
+	Tensor tensor(float[] data, Size size);
+	
+	/**
+	 * Create a new scalar Tensor from the 
+	 * provided value.
+	 * 
+	 * @param value The scalar value.
+	 * @return  a new scalar Tensor from the 
+	 * provided value.
+	 */
+	Tensor tensor(float value);
+	
+	/**
+	 * Create a new Tensor from the provided
+	 * TensorData instance.
+	 * 
+	 * @param tensorData The tensor data.
+	 * @return a new Tensor from the provided
+	 * TensorData instance.
+	 */
+	Tensor tensor(TensorData tensorData);
+	
+	/**
+	 * Create a new Size instance from the
+	 * provided dimension sizes.
+	 * 
+	 * @param dimensionSizes The dimension sizes.
+	 * @return a new Size instance from the
+	 * provided dimension sizes.
+	 */
+	default Size Size(int... dimensionSizes) {
+		return new Size(dimensionSizes);
+	}
+	
+	
+	default Size Size() {
+		return new Size();
+	}
+	
+	/**
+	 * Create a new Size instance from the
+	 * provided Sizes containing dimension
+	 * sizes.  Allows dimensions to be grouped
+	 * to allow for matrix representation.
+	 * 
+	 * @param sizes The sizes containing
+	 * the dimension sizes.
+	 * @return new Size instance from the
+	 * provided Sizes
+	 */
+	default Size Size(Size... sizes) {
+		return new Size(sizes);
+	}
 }

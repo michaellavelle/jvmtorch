@@ -1,42 +1,73 @@
+/*
+ * Copyright 2020 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */
 package org.jvmtorch.impl;
 
-import org.jvmtorch.torch.Size;
-import org.jvmtorch.torch.TensorOperation;
+import static org.jvmpy.python.Python.tuple;
 
+import java.util.List;
 import java.util.function.UnaryOperator;
 
-public class TensorOperationImpl<T> implements TensorOperation<T> {
+import org.jvmpy.python.Tuple;
+import org.jvmpy.symbolictensors.OperationImpl;
+import org.jvmpy.symbolictensors.TensorDimensionsContainer;
+import org.jvmtorch.torch.Size;
+import org.jvmtorch.torch.TensorOperation;
+import org.jvmtorch.torch.Torch;
 
-    private UnaryOperator<T> operation;
-    private Size size;
-    private String name;
+public class TensorOperationImpl<T> extends OperationImpl<T> implements TensorOperation<T> {
 
-    public TensorOperationImpl(String name, UnaryOperator<T> operation, Size size) {
-        this.size = size;
-        this.name = name;
-        this.operation = operation;
-    }
+	private UnaryOperator<Size> targetSizeMapping;
+	
+	public TensorOperationImpl(Torch torch, String name, UnaryOperator<T> operation, UnaryOperator<Size> targetSizeMapping) {
+		super(name, operation, d -> dimensions(targetSizeMapping.apply(torch.Size(d.dimensions()).names_(names(d.dimensionNames())))));
+		this.targetSizeMapping = targetSizeMapping;
+	}
 
-    public TensorOperationImpl(String name, UnaryOperator<T> operation, int firstDim, int... remainingDims) {
-        this.size = new Size(firstDim, remainingDims);
-        this.operation = operation;
-        this.name = name;
-    }
+	
+	private static Tuple<String> names(List<String> names) {
+		if (names == null) {
+			return null;
+		} else {
+			return tuple(names);
+		}
+	}
+	
+	@Override
+	public UnaryOperator<Size> sizeMapping(Torch torch) {
+		return targetSizeMapping;
+	}
 
-    @Override
-    public int[] dimensions() {
-         return size.getDimensions();
-    }
 
-    @Override
-    public String name() {
-        return name;
-    }
+	private static TensorDimensionsContainer dimensions(Size size) {
+		return new TensorDimensionsContainer() {
 
-    ;
+			@Override
+			public int[] dimensions() {
+				return size.dimensions();
+			}
 
-    @Override
-    public T apply(T t) {
-        return operation.apply(t);
-    }
+			@Override
+			public List<String> dimensionNames() {
+
+				Tuple<String> names = size.dimensionNames();
+				if (names == null) {
+					return null;
+				} else {
+					return names.asList();
+				}
+			}
+			
+		};
+	}
 }

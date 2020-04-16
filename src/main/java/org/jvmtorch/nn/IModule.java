@@ -13,17 +13,16 @@
  */
 package org.jvmtorch.nn;
 
-import org.jvmtorch.torch.Tensor;
-import org.jvmtorch.torch.TensorOperations;
-import org.jvmpy.python.OrderedDict;
-
 import java.util.function.Function;
 
-public interface IModule<M, I extends TensorOperations<I>> extends BaseModule<M, I>, Function<Tensor<I>, Tensor<I>>{
+import org.jvmpy.python.OrderedDict;
+import org.jvmtorch.torch.Tensor;
+
+public interface IModule extends BaseModule, Function<Tensor, Tensor>{
 	
-	Tensor<I> forward(Tensor<I> input);
+	Tensor forward(Tensor input);
 		
-	OrderedDict<Parameter<I>> parameters();
+	OrderedDict<Parameter> parameters();
 	
 	void zero_grad();
 }

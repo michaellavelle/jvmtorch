@@ -22,6 +22,13 @@ public class IntTuple extends GenericTuple<Integer> {
 				.boxed()
 				.toArray(Integer[]::new));
 	}
+	
+	public IntTuple(int[] ints) {
+		super(IntStream.of(ints)
+				.boxed()
+				.toArray(Integer[]::new));
+	}
+	
 
 
 

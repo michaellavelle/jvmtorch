@@ -13,5 +13,11 @@
  */
 package org.jvmpy.python;
 
+import java.util.List;
+
 public interface Tuple<E> extends Subscriptable<E>, Iterable<E> {
+	
+	List<E> asList();
+	
+	void put(int index, E value);
 }

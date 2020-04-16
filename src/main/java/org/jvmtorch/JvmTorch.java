@@ -13,31 +13,38 @@
  */
 package org.jvmtorch;
 
-import org.jvmtorch.impl.ml4j.ML4JJvmTorch;
+import org.jvmtorch.impl.ml4j.ML4JJvmTorchFactory;
+import org.jvmtorch.nn.NN;
+import org.jvmtorch.nn.functional.Functional;
+import org.jvmtorch.torch.Size;
+import org.jvmtorch.torch.Torch;
+import org.jvmtorch.torch.optim.Optim;
 
-/**
- * Entry point for JvmTorch functionality from Java code.
- * 
- * Developers can statically import the JvmTorch attributes
- * (ie. import static org.jvmpy.jvmtorch.JvmTorch.*; )
- * 
- * torch, F, nn and optim are then available for use,
- * 
- * eg.  var x = torch.randn(2, 3);
- * 
- * For alternate implementations, developers can create their
- * own JvmTorch class in a separate package extending from 
- * a custom implementation class.
- * 
- * This extension strategy means that only the package name of the
- * JvmTorch import needs to be changed to switch implementations.
- * 
- * Custom base classes can delegate to an implementation of
- * JvmTorchFactory which bridges the gap between Python-style 
- * coding (JvmTorch) and a Java-style factory pattern
- * ( JvmTorchFactory )
- * 
- * @author Michael Lavelle
- */
-public class JvmTorch extends ML4JJvmTorch {
+public class JvmTorch {
+    
+    public static final JvmTorchFactory DEFAULT_PYTORCH_FACTORY = new ML4JJvmTorchFactory();
+
+    public static Torch torch;
+    public static Functional F;
+    public static NN nn;
+    public static Optim optim;
+
+    static {
+    	init(DEFAULT_PYTORCH_FACTORY);
+    }
+    
+    public static void init(JvmTorchFactory jvmTorchFactory) {
+    	 torch = jvmTorchFactory.createTorch();
+         F = jvmTorchFactory.createFunctional();
+         nn = jvmTorchFactory.createNN();
+         optim = jvmTorchFactory.createOptim();
+    }
+    
+    public static Size Size(int... sizes) {
+		return torch.Size(sizes);
+	}
+    
+    public static Size Size(Size... sizes) {
+		return torch.Size(sizes);
+	}
 }

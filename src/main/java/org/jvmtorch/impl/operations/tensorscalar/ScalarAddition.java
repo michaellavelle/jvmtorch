@@ -11,21 +11,25 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.jvmtorch.torch;
+package org.jvmtorch.impl.operations.tensorscalar;
 
-import org.jvmpy.python.GenericTuple;
-import org.jvmpy.python.Tuple;
+import java.util.function.UnaryOperator;
 
-public abstract class NextFunctions<T extends TensorOperations<T>> extends GenericTuple<Tuple<GradFunction<T>>>{
+import org.jvmtorch.torch.TensorOperations;
 
-	@SafeVarargs
-	public NextFunctions(Tuple<GradFunction<T>> first, Tuple<GradFunction<T>>... remaining) {
-		super(first, remaining);
+public class ScalarAddition<T extends TensorOperations<T>> implements DifferentiableTensorScalarFunction<T> {
+
+	@Override
+	public String name() {
+		return "Add";
 	}
 	
-	@SuppressWarnings("unchecked")
-	@Override
-	public GenericTuple<GradFunction<T>>[] getComponents() {
-		return getComponentsAsType(GenericTuple.class);
+	public <S extends TensorOperations<S>> UnaryOperator<S> forwardPropFunction(float scalar) {
+		return t -> t.add(scalar);
 	}
+	
+	public <S extends TensorOperations<S>> UnaryOperator<S> backPropFunction(TensorScalar<S> variables) {
+		return g -> g;
+	}
+
 }

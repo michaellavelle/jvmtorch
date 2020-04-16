@@ -11,58 +11,63 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.jvmtorch.nn.modules;
+package org.jvmtorch.nn;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jvmpy.python.OrderedDict;
 import org.jvmpy.python.PythonClass;
-import org.jvmtorch.nn.Functional;
-import org.jvmtorch.nn.IModule;
-import org.jvmtorch.nn.NN;
-import org.jvmtorch.nn.Parameter;
+import org.jvmtorch.nn.functional.Functional;
+import org.jvmtorch.torch.Size;
 import org.jvmtorch.torch.Tensor;
-import org.jvmtorch.torch.TensorOperations;
 import org.jvmtorch.torch.Torch;
 
-import java.util.List;
-import java.util.Map;
 
+public abstract class Module<M> extends PythonClass<M> implements IModule {
 
-public abstract class  Module<M, I extends TensorOperations<I>> extends PythonClass<M> implements IModule<M, I> {
+	protected Functional F; 
+	protected NN nn;
+	protected OrderedDict<Parameter> moduleParameters;
+	protected OrderedDict<IModule> subModules;
 
-	protected Functional<I> F;
-	protected NN<I> nn;
-	protected OrderedDict<Parameter<I>> moduleParameters;
-	protected OrderedDict<IModule<?, I>> subModules;
+	protected Torch torch;
 
-	protected Torch<I> torch;
-
-	public Module(NN<I> nn) {
+	public Module(NN nn) {
 		this.F = nn.f();
 		this.nn = nn;
 		this.torch = nn.torch();
 	}
 
-	protected Parameter <I> Parameter(int...dims) {
-		return nn.Parameter(dims);
+	protected Parameter Parameter(Size size) {
+		return nn.Parameter(size);
 	}
 	
-	protected OrderedDict<IModule<?, I>> getSubModules() {
+	protected Size Size(int... sizes) {
+		return torch.Size(sizes);
+	}
+	
+	protected Size Size(Size... sizes) {
+		return torch.Size(sizes);
+	}
+	
+	protected OrderedDict<IModule> getSubModules() {
 		if (subModules == null) {
 			subModules = new OrderedDict<>(IModule.class);
-			for (Map.Entry<String, IModule> field : getFields(IModule.class).entrySet()) {
+			for (Entry<String, IModule> field : getFields(IModule.class)) {
 				subModules.add(new ImmutablePair<>(field.getKey(), field.getValue()));
 			}
 		}
 		return subModules;
 	}
 	
-	@SuppressWarnings("unchecked")
-	protected OrderedDict<Parameter<I>> getModuleParameters() {
+	protected OrderedDict<Parameter> getModuleParameters() {
 		if (moduleParameters == null) {
 			moduleParameters = new OrderedDict<>(Parameter.class);
-			for (Map.Entry<String, Parameter> field : getFields(Parameter.class).entrySet()) {
+			for (Map.Entry<String, Parameter> field : getFields(Parameter.class)) {
 				moduleParameters.add(new ImmutablePair<>(field.getKey(), field.getValue()));
 			}
 		}
@@ -75,13 +80,13 @@ public abstract class  Module<M, I extends TensorOperations<I>> extends PythonCl
 	}
 
 	@Override
-	public Tensor<I> apply(Tensor<I> tensor) {
+	public Tensor apply(Tensor tensor) {
 		return forward(tensor);
 	}
 
 	@Override
-	public OrderedDict<Parameter<I>> parameters() {
-		OrderedDict<Parameter<I>> parameters =new OrderedDict<>(Parameter.class);
+	public OrderedDict<Parameter> parameters() {
+		OrderedDict<Parameter> parameters =new OrderedDict<>(Parameter.class);
 		getModuleParameters().forEach(p -> parameters.add(p));
 		getSubModules().forEach(m -> parameters.addAll(m.getRight().parameters()));
 		return parameters;
@@ -92,10 +97,10 @@ public abstract class  Module<M, I extends TensorOperations<I>> extends PythonCl
 
 		StringBuilder stringBuilder = new StringBuilder();
 		stringBuilder.append(this.getClass().getSimpleName() + "(");
-		List<Pair<String, IModule<?, I>>> subModules = getSubModules();
+		List<Pair<String, IModule>> subModules = getSubModules();
 		if (!subModules.isEmpty()) {
 			stringBuilder.append("\n");
-			for (Pair<String, ? extends IModule<?, ?>> layer : subModules) {
+			for (Pair<String, ? extends IModule> layer : subModules) {
 				stringBuilder.append("\t(");
 				stringBuilder.append(layer.getKey());
 				stringBuilder.append("): ");

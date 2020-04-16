@@ -14,7 +14,12 @@
 package org.jvmpy.python;
 
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 public abstract class PythonClass<M> {
 
@@ -27,10 +32,10 @@ public abstract class PythonClass<M> {
 	protected abstract M self();
 	
 	@SuppressWarnings("unchecked")
-	protected <S extends T, T> Map<String, T> getFields(Class<S> fieldClass) {
+	protected <S extends T, T> List<Pair<String, T>> getFields(Class<S> fieldClass) {
 		try {
 
-			Map<String, T> fields = new HashMap<>();
+			List<Pair<String, T>> fields = new ArrayList<>();
 			List<Field> fieldList = new ArrayList<>();
 			populateAllFields(fieldList, self().getClass());
 
@@ -38,13 +43,13 @@ public abstract class PythonClass<M> {
 				field.setAccessible(true);
 				if (fieldClass.isAssignableFrom(field.getType())) {
 					T value = (T)field.get(self());
-					fields.put(field.getName(), (T) value);
+					fields.add(new ImmutablePair<>(field.getName(), (T) value));
 				} else if (Attribute.class.isAssignableFrom(field.getType())) {
 					Attribute<?> attribute = (Attribute<?>)field.get(self());
 					if (attribute.value != null) {
 						if (fieldClass.isAssignableFrom(attribute.value.getClass())) {
 							T value = (T)attribute.value;
-							fields.put(field.getName(), (T) value);
+							fields.add(new ImmutablePair<>(field.getName(), (T) value));
 						}
 					}
 				}

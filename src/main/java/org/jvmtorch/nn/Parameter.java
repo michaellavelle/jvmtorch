@@ -13,42 +13,46 @@
  */
 package org.jvmtorch.nn;
 
-import org.jvmtorch.torch.GradFunction;
-import org.jvmtorch.torch.Tensor;
-import org.jvmtorch.torch.TensorOperation;
-import org.jvmtorch.torch.TensorOperations;
-import org.jvmpy.python.Tuple;
-
 import java.util.List;
 
-public interface Parameter<T extends TensorOperations<T>> extends Tensor<T> {
+import org.jvmpy.python.Tuple;
+import org.jvmtorch.torch.GradFunction;
+import org.jvmtorch.torch.Tensor;
+import org.jvmtorch.torch.TensorData;
+import org.jvmtorch.torch.TensorOperation;
+
+public interface Parameter extends Tensor {
 
 	void zero_grad();
 
-	Tensor<T> getTensor();
+	Tensor data();
+	
+	Tensor data_(Tensor data);
 
 	@Override
-	Parameter<T> grad_(Tensor<T> grad);
+	Parameter grad_(Tensor grad);
 
 	@Override
-	Parameter<T> requires_grad_(boolean requires_grad);
+	Parameter requires_grad_(boolean requires_grad);
+
+	
+	@Override
+	Parameter withNextFunctions(String name, List<TensorOperation<Tensor>> operations,
+			Tuple<Tuple<GradFunction>> nextFunctions);
+	
+	@Override
+	Tensor performUnaryMappingOperation(String newTensorName, TensorOperation<TensorData> operation, TensorOperation<Tensor> backwardOp);
 
 	@Override
-	Parameter<T> withNextFunctions(String name, List<TensorOperation<Tensor<T>>> tensorOperations, Tuple<Tuple<GradFunction<T>>> nextFunctions);
+	Parameter mul_(Tensor other);
 
 	@Override
-	Tensor<T> performUnaryMappingOperation(String newTensorName, TensorOperation<T> operation, TensorOperation<Tensor<T>> backwardOp);
+	Parameter sub_(Tensor other);
 
 	@Override
-	Parameter<T> mul_(Tensor<T> other);
+	Parameter add_(Tensor other);
 
 	@Override
-	Parameter<T> sub_(Tensor<T> other);
-
-	@Override
-	Parameter<T> add_(Tensor<T> other);
-
-	@Override
-	Tensor<T> transpose();
+	Tensor t();
 	
 }

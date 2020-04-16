@@ -11,20 +11,25 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.jvmtorch.nn;
+package org.jvmtorch.impl.operations.tensorscalar;
 
-import org.jvmtorch.torch.Tensor;
+import java.util.function.UnaryOperator;
+
 import org.jvmtorch.torch.TensorOperations;
-import org.jvmpy.python.Tuple;
 
-public interface Functional<T extends TensorOperations<T>> {
+public class ScalarMultiplication<T extends TensorOperations<T>> implements DifferentiableTensorScalarFunction<T> {
 
-	Tensor<T> relu(Tensor<T> input);
+	public <S extends TensorOperations<S>> UnaryOperator<S> forwardPropFunction(float scalar) {
+		return t -> t.mul(scalar);
+	}
 	
-	Tensor<T> max_pool2d(Tensor<T> input, Tuple<Integer> tuple);
-	
-	Tensor<T> max_pool2d(Tensor<T> input, int i);
+	public <S extends TensorOperations<S>> UnaryOperator<S> backPropFunction(TensorScalar<S> variables) {
+		return g -> g.mul(variables.scalar());
+	}
 
-	Tensor<T> linear(Tensor<T> input, Parameter<T> weight, Parameter<T> bias);
+	@Override
+	public String name() {
+		return "Mul";
+	}
 
 }

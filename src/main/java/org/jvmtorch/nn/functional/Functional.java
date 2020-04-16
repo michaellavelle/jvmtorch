@@ -11,16 +11,24 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.jvmtorch.torch;
+package org.jvmtorch.nn.functional;
 
-import org.jvmpy.python.Tuple;
+import org.jvmtorch.nn.Parameter;
+import org.jvmtorch.torch.Size;
+import org.jvmtorch.torch.Tensor;
 
-public class NextFunctionsImpl<T extends TensorOperations<T>> extends NextFunctions<T> {
+public interface Functional {
 
-	@SafeVarargs
-	public NextFunctionsImpl(Tuple<GradFunction<T>> first, Tuple<GradFunction<T>>... remaining) {
-		super(first, remaining);
-	}
+	Tensor relu(Tensor input);
 	
+	Tensor sigmoid(Tensor input);
+
+	Tensor softmax(Tensor input);
+	
+	Tensor max_pool2d(Tensor input, Size size);
+	
+	Tensor max_pool2d(Tensor input, int size);
+
+	Tensor linear(Tensor input, Parameter weight, Parameter bias);
 
 }

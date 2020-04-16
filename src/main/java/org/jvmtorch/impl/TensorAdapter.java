@@ -1,50 +1,67 @@
+/*
+ * Copyright 2020 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */
 package org.jvmtorch.impl;
-
-import org.jvmtorch.torch.*;
-import org.jvmpy.python.Tuple;
-import org.jvmtorch.torch.*;
 
 import java.util.List;
 
-public class TensorAdapter<T extends TensorOperations<T>> implements Tensor<T> {
+import org.jvmpy.python.Tuple;
+import org.jvmtorch.torch.GradFunction;
+import org.jvmtorch.torch.Size;
+import org.jvmtorch.torch.Tensor;
+import org.jvmtorch.torch.TensorData;
+import org.jvmtorch.torch.TensorOperation;
+import org.jvmtorch.torch.Torch;
 
-	protected Tensor<T> adapted;
+public class TensorAdapter implements Tensor {
+
+	protected Tensor adapted;
 	
-	public TensorAdapter(Tensor<T> adapted) {
+	public TensorAdapter(Tensor adapted) {
 		this.adapted = adapted;
 	}
 	
 	@Override
-	public Tensor<T> get() {
+	public Tensor get() {
 		return adapted.get();
 	}
 
-	public Tensor<T> getTensor() {
+	public Tensor getTensor() {
 		return adapted;
 	}
 
 	@Override
-	public Tensor<T> mul(float value) {
+	public Tensor mul(float value) {
 		return adapted.mul(value);
 	}
 
 	@Override
-	public Tensor<T> add(float value) {
+	public Tensor add(float value) {
 		return adapted.add(value);
 	}
 
 	@Override
-	public Tensor<T> add(Tensor<T> other) {
+	public Tensor add(Tensor other) {
 		return adapted.add(other);
 	}
 
 	@Override
-	public Tensor<T> mean() {
+	public Tensor mean() {
 		return adapted.mean();
 	}
 
 	@Override
-	public Tensor<T> mul(Tensor<T> other) {
+	public Tensor mul(Tensor other) {
 		return adapted.mul(other);
 	}
 
@@ -54,35 +71,30 @@ public class TensorAdapter<T extends TensorOperations<T>> implements Tensor<T> {
 	}
 
 	@Override
-	public Tensor<T> mul_(Tensor<T> other) {
+	public Tensor mul_(Tensor other) {
 		adapted.mul_(other);
 		return this;
 	}
 
 	@Override
-	public Tensor<T> sub_(Tensor<T> other) {
+	public Tensor sub_(Tensor other) {
 		adapted.sub_(other);
 		return this;
 	}
 
 	@Override
-	public Tensor<T> add_(Tensor<T> other) {
+	public Tensor add_(Tensor other) {
 		adapted.add_(other);
 		return this;
 	}
 
 	@Override
-	public Tensor<T> matmul(Tensor<T> other) {
+	public Tensor matmul(Tensor other) {
 		return adapted.matmul(other);
 	}
 
 	@Override
-	public Tensor<T> transpose() {
-		return adapted.transpose();
-	}
-
-	@Override
-	public Tensor<T> t() {
+	public Tensor t() {
 		return adapted.t();
 	}
 
@@ -92,7 +104,7 @@ public class TensorAdapter<T extends TensorOperations<T>> implements Tensor<T> {
 	}
 
 	@Override
-	public void backward(Tensor<T> gradient) {
+	public void backward(Tensor gradient) {
 		adapted.backward(gradient);
 	}
 
@@ -102,7 +114,7 @@ public class TensorAdapter<T extends TensorOperations<T>> implements Tensor<T> {
 	}
 
 	@Override
-	public Tensor<T> grad_fn_(GradFunction<T> grad_fn) {
+	public Tensor grad_fn_(GradFunction grad_fn) {
 		adapted.grad_fn_(grad_fn);
 		return this;
 	}
@@ -113,7 +125,7 @@ public class TensorAdapter<T extends TensorOperations<T>> implements Tensor<T> {
 	}
 
 	@Override
-	public Tensor<T> grad_(Tensor<T> grad) {
+	public Tensor grad_(Tensor grad) {
 		adapted.grad_(grad);
 		return this;
 	}
@@ -124,7 +136,7 @@ public class TensorAdapter<T extends TensorOperations<T>> implements Tensor<T> {
 	}
 
 	@Override
-	public Tensor<T> grad() {
+	public Tensor grad() {
 		return adapted.grad();
 	}
 
@@ -134,36 +146,58 @@ public class TensorAdapter<T extends TensorOperations<T>> implements Tensor<T> {
 	}
 
 	@Override
-	public T toTensorOperations() {
-		return adapted.toTensorOperations();
+	public TensorData toTensorData() {
+		return adapted.toTensorData();
 	}
 
 	@Override
-	public Tensor<T> requires_grad_(boolean requires_grad) {
+	public Tensor requires_grad_(boolean requires_grad) {
 		adapted.requires_grad_(requires_grad);
 		return this;
 	}
 
 	@Override
-	public Tensor<T> withNextFunctions(String name, List<TensorOperation<Tensor<T>>> operations,
-			Tuple<Tuple<GradFunction<T>>> nextFunctions) {
+	public Tensor withNextFunctions(String name, List<TensorOperation<Tensor>> operations,
+			Tuple<Tuple<GradFunction>> nextFunctions) {
 		adapted.withNextFunctions(name, operations, nextFunctions);
 		return this;
 	}
 
 	@Override
-	public Tensor<T> performUnaryMappingOperation(String newTensorName,
-												  TensorOperation<T> operation, TensorOperation<Tensor<T>> backwardOp) {
+	public Tensor performUnaryMappingOperation(String newTensorName,
+			TensorOperation<TensorData> operation, TensorOperation<Tensor> backwardOp) {
 		return adapted.performUnaryMappingOperation(newTensorName, operation, backwardOp);
 	}
 
 	@Override
-	public Tensor<T> view(int i, int num_flat_features) {
+	public Tensor view(int i, int num_flat_features) {
 		return adapted.view(i, num_flat_features);
 	}
 
 	@Override
-	public float[] data() {
-		return getDataAsFloatArray();
+	public Tuple<String> names() {
+		return adapted.names();
+	}
+
+	@Override
+	public Tensor names_(Tuple<String> names) {
+		adapted.names_(names);
+		return this;
+	}
+
+	@Override
+	public Tensor size_(Size size) {
+		adapted.size_(size);
+		return this;
+	}
+
+	@Override
+	public Torch torch() {
+		return adapted.torch();
+	}
+
+	@Override
+	public Tensor view(Size size) {
+		return adapted.view(size);
 	}
 }

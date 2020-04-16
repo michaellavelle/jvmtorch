@@ -1,156 +1,236 @@
 package org.jvmtorch.impl.ml4j;
 
+import static org.jvmtorch.JvmTorch.torch;
+
+import org.jvmtorch.impl.FunctionalImpl;
 import org.jvmtorch.impl.TensorOperationImpl;
-import org.jvmtorch.nn.Functional;
-import org.jvmtorch.nn.Parameter;
+import org.jvmtorch.nn.functional.Functional;
+import org.jvmtorch.torch.Size;
 import org.jvmtorch.torch.Tensor;
-import org.jvmpy.python.Tuple;
+import org.jvmtorch.torch.TensorConverter;
+import org.jvmtorch.torch.TensorDataConverter;
 import org.ml4j.Matrix;
-import org.ml4j.MatrixFactory;
+import org.ml4j.nn.activationfunctions.ActivationFunctionBaseType;
+import org.ml4j.nn.activationfunctions.ActivationFunctionProperties;
+import org.ml4j.nn.activationfunctions.ActivationFunctionType;
 import org.ml4j.nn.axons.Axons3DConfig;
 import org.ml4j.nn.axons.PoolingAxonsConfig;
 import org.ml4j.nn.components.DirectedComponentGradient;
 import org.ml4j.nn.components.DirectedComponentGradientImpl;
 import org.ml4j.nn.components.DirectedComponentsContext;
-import org.ml4j.nn.components.DirectedComponentsContextImpl;
+import org.ml4j.nn.components.activationfunctions.DifferentiableActivationFunctionComponent;
+import org.ml4j.nn.components.activationfunctions.DifferentiableActivationFunctionComponentActivation;
 import org.ml4j.nn.components.axons.DirectedAxonsComponent;
 import org.ml4j.nn.components.axons.DirectedAxonsComponentActivation;
 import org.ml4j.nn.components.factories.DirectedComponentFactory;
 import org.ml4j.nn.neurons.ImageNeuronsActivationImpl;
+import org.ml4j.nn.neurons.Neurons;
 import org.ml4j.nn.neurons.Neurons3D;
 import org.ml4j.nn.neurons.NeuronsActivation;
+import org.ml4j.nn.neurons.NeuronsActivationFeatureOrientation;
 import org.ml4j.nn.neurons.format.ImageNeuronsActivationFormat;
+import org.ml4j.nn.neurons.format.features.DimensionScope;
 
-import static org.jvmtorch.impl.ml4j.ML4JJvmTorch.torch;
+public class ML4JFunctionalImpl extends FunctionalImpl implements Functional {
 
-public class ML4JFunctionalImpl implements Functional<ML4JTensorOperations> {
-
-	private MatrixFactory matrixFactory;
-	private DirectedComponentsContext directedComponentsContext;
 	private DirectedComponentFactory directedComponentFactory;
-	
-	public ML4JFunctionalImpl(DirectedComponentFactory directedComponentFactory, MatrixFactory matrixFactory) {
-		this.matrixFactory = matrixFactory;
+	private TensorDataConverter<ML4JTensorOperations> tensorDataConverter;
+	private TensorConverter<ML4JTensor> tensorConverter;
+
+	public ML4JFunctionalImpl(DirectedComponentFactory directedComponentFactory,
+			TensorDataConverter<ML4JTensorOperations> tensorDataConverter,
+			TensorConverter<ML4JTensor> tensorConverter) {
 		this.directedComponentFactory = directedComponentFactory;
-		this.directedComponentsContext = new DirectedComponentsContextImpl(matrixFactory, true);
+		this.tensorDataConverter = tensorDataConverter;
+		this.tensorConverter = tensorConverter;
 	}
 
-	@Override
-	public Tensor<ML4JTensorOperations> relu(Tensor<ML4JTensorOperations> input) {
+	public Tensor activationFunction(Tensor input, ActivationFunctionType activationFunctionType, boolean isCostFunctionGradient) {
 
+		ML4JTensor ml4jTensor = tensorConverter.createTensor(input);
+		
+		NeuronsActivationFeatureOrientation target = null;
+		if (activationFunctionType.getBaseType() == ActivationFunctionBaseType.SOFTMAX) {
+			target = NeuronsActivationFeatureOrientation.ROWS_SPAN_FEATURE_SET;
+		}
+		
+		NeuronsActivation neuronsActivation = ml4jTensor.toNeuronsActivation(DimensionScope.INPUT, target);		
+		
+		final DifferentiableActivationFunctionComponent activationFunction = directedComponentFactory
+				.createDifferentiableActivationFunctionComponent(activationFunctionType.toString(),
+						neuronsActivation.getNeurons(), activationFunctionType, new ActivationFunctionProperties());
+		
+		DifferentiableActivationFunctionComponentActivation act = activationFunction.forwardPropagate(neuronsActivation,
+				ml4jTensor.getDirectedComponentsContext());
 
-
-		// TODO
-		Tensor<ML4JTensorOperations> output = input.performUnaryMappingOperation("ReluOutput", new TensorOperationImpl<>("Relu", l -> l, input.size()), new TensorOperationImpl<>("ReluBackward", l->l, input.size()));
+		NeuronsActivation outActivation = act.getOutput();
+			
+						
+		ML4JTensor outTensor = new ML4JTensor(torch, ml4jTensor.getDirectedComponentsContext(), tensorDataConverter, "out",
+				"out", outActivation, input.requires_grad());
+					
+		Tensor output = input.performUnaryMappingOperation(activationFunctionType.toString() + "Output",
+				new TensorOperationImpl<>(torch, activationFunctionType.toString(), l -> outTensor.toTensorData(),
+						s -> outTensor.size()),
+				new TensorOperationImpl<>(torch, activationFunctionType.toString() + "Backward",
+						l -> backward(activationFunctionType, act, outActivation.getNeurons(), l, input.requires_grad()), s -> input.size()));
 
 		return output;
 	}
 
 	@Override
-	public Tensor<ML4JTensorOperations> max_pool2d(Tensor<ML4JTensorOperations> input, Tuple<Integer> tuple) {
-		// TODO
+	public Tensor relu(Tensor input) {
 
-		Matrix inputMatrix = input.toTensorOperations().getMatrix();
+		return activationFunction(input, ActivationFunctionType.getBaseType(ActivationFunctionBaseType.RELU), false);
+	}
 
-		int inputWidth = (int)Math.sqrt(inputMatrix.getColumns() / 6);
-		int outputWidth = inputWidth/2;
-		int inputHeight = inputWidth;
-		int outputHeight = outputWidth;
+	private Tensor backward(ActivationFunctionType activationFunctionType, DifferentiableActivationFunctionComponentActivation act, Neurons neurons, Tensor back,
+			boolean requires_grad) {
+		
+		ML4JTensor ml4jTensor = tensorConverter.createTensor(back);
+		
+		NeuronsActivationFeatureOrientation target = null;
+		if (activationFunctionType.getBaseType() == ActivationFunctionBaseType.SOFTMAX) {
+			target = NeuronsActivationFeatureOrientation.ROWS_SPAN_FEATURE_SET;
+		}
+		
+		NeuronsActivation neuronsActivation = ml4jTensor.toNeuronsActivation(DimensionScope.OUTPUT, target);
+		
+		DirectedComponentsContext directedComponentsContext = ml4jTensor.getDirectedComponentsContext();
+
+		DirectedComponentGradient<NeuronsActivation> a = new DirectedComponentGradientImpl<>(neuronsActivation);
+		
+		NeuronsActivation outNeuronsActivation = neuronsActivation;
+		if (!ml4jTensor.isCostFunctionGradient()) {
+			outNeuronsActivation = act.backPropagate(a).getOutput();	
+		} 
+		
+		Tensor output = new ML4JTensor(torch, directedComponentsContext, tensorDataConverter, "out", "out",
+				outNeuronsActivation, requires_grad);
+		
+		return output;
+
+	}
+
+	@Override
+	public Tensor softmax(Tensor input) {
+
+		boolean isCostFunctionGradient = false;
+		
+		if (input instanceof ML4JTensor) {
+			isCostFunctionGradient = ((ML4JTensor)input).isCostFunctionGradient();
+		}
+		return activationFunction(input, 
+				ActivationFunctionType.getBaseType(ActivationFunctionBaseType.SOFTMAX), isCostFunctionGradient);
+
+	}
+	
+	@Override
+	public Tensor sigmoid(Tensor input) {
+		
+		boolean isCostFunctionGradient = false;
+		
+		if (input instanceof ML4JTensor) {
+			isCostFunctionGradient = ((ML4JTensor)input).isCostFunctionGradient();
+		}
+
+		return activationFunction(input, ActivationFunctionType.getBaseType(ActivationFunctionBaseType.SIGMOID), isCostFunctionGradient);
+
+	}
+
+	@Override
+	public Tensor max_pool2d(Tensor input, Size size) {
+		
+		ML4JTensor ml4jTensor = tensorConverter.createTensor(input);
+				
+		NeuronsActivation inputNeuronsActivation = ml4jTensor.toNeuronsActivation(DimensionScope.INPUT, NeuronsActivationFeatureOrientation.ROWS_SPAN_FEATURE_SET);
+		
+		Matrix inputMatrix = inputNeuronsActivation.getActivations(ml4jTensor.getDirectedComponentsContext().getMatrixFactory());
 
 
-		//System.out.println("Output max pool:" + outputHeight);
+		PoolingAxonsConfig config = getMaxPoolConfig(inputNeuronsActivation, size);
 
-		Axons3DConfig axonsConfig = new Axons3DConfig(new
-				Neurons3D(inputWidth, inputHeight, 6, false),
-				new Neurons3D(outputWidth, outputHeight, 6, false))
-				.withStrideWidth(2).withStrideHeight(2);
-		PoolingAxonsConfig config = new PoolingAxonsConfig(axonsConfig);
+		DirectedAxonsComponent<Neurons3D, Neurons3D, ?> maxPoolingAxons = directedComponentFactory
+				.createMaxPoolingAxonsComponent("maxpool", config, true);
+		
+		NeuronsActivation neuronsActivation = new ImageNeuronsActivationImpl(inputMatrix,
+				config.getAxonsConfig().getLeftNeurons(), ImageNeuronsActivationFormat.ML4J_DEFAULT_IMAGE_FORMAT, true);
 
-		DirectedAxonsComponent<Neurons3D, Neurons3D, ?> maxPoolingAxons
-				= directedComponentFactory
-				.createMaxPoolingAxonsComponent("maxpool", config, false);
+		DirectedAxonsComponentActivation activation = maxPoolingAxons.forwardPropagate(neuronsActivation,
+				ml4jTensor.getDirectedComponentsContext());
+		
+		NeuronsActivation outNeuronsActivation= activation.getOutput();
 
-		NeuronsActivation neuronsActivation
-				= new ImageNeuronsActivationImpl(inputMatrix.transpose(), config.getAxonsConfig().getLeftNeurons(),
-				ImageNeuronsActivationFormat.ML4J_DEFAULT_IMAGE_FORMAT, true);
-
-		DirectedAxonsComponentActivation activation =  maxPoolingAxons.forwardPropagate(neuronsActivation, directedComponentsContext);
-
-		Matrix outMatrix = activation.getOutput().getActivations(directedComponentsContext.getMatrixFactory());
-
-
-		ML4JTensor convOutput =  new ML4JTensor(torch, directedComponentsContext.getMatrixFactory(), "out", "out", outMatrix.transpose());
+		Tensor convOutput = new ML4JTensor(torch, ml4jTensor.getDirectedComponentsContext(), tensorDataConverter,
+				"maxpoolout", "maxpoolout2", outNeuronsActivation, input.requires_grad());
+		
 		convOutput.requires_grad_(true);
-		Tensor<ML4JTensorOperations> output = input.performUnaryMappingOperation("ConvOutput", new TensorOperationImpl<>("ConvOutput", l -> convOutput.toTensorOperations(), convOutput.size()), new TensorOperationImpl<>("ConvBackward", l-> backward(activation, axonsConfig.getRightNeurons(), l), input.size()));
+		Tensor output = input.performUnaryMappingOperation("ConvOutput",
+				new TensorOperationImpl<>(torch, "ConvOutput", l -> convOutput.toTensorData(), s -> convOutput.size()),
+				new TensorOperationImpl<>(torch, "ConvBackward",
+						l -> backward(activation, config.getAxonsConfig().getRightNeurons(), l, input.requires_grad()), s -> input.size()));
 
 		return output;
 
+	}
+	
+	private PoolingAxonsConfig getMaxPoolConfig(NeuronsActivation inputNeuronsActivation, Size pool_size) {
+		Integer inputWidth = null;
+		Integer inputHeight = null;
+		Integer inputDepth = null;
+
+		if (inputNeuronsActivation.getNeurons() instanceof Neurons3D) {
+			Neurons3D neurons3D = (Neurons3D)inputNeuronsActivation.getNeurons();
+			inputWidth = neurons3D.getWidth();
+			inputHeight = neurons3D.getHeight();
+			inputDepth = neurons3D.getDepth();
+			
+		} else {
+			throw new IllegalArgumentException("");
+		}
+	
+		int filterHeight = pool_size.get(0);
+		int filterWidth = pool_size.numel() == 1 ? pool_size.get(0) : pool_size.get(1);
+		int strideWidth = filterWidth;
+		int strideHeight= filterHeight;
+
+		int outputWidth=(inputWidth-filterWidth)/strideWidth +1;
+		int outputHeight=(inputHeight-filterHeight)/strideHeight +1;
+
+		Axons3DConfig axonsConfig = new Axons3DConfig(new Neurons3D(inputWidth, inputHeight, inputDepth, false),
+				new Neurons3D(outputWidth, outputHeight, inputDepth, false)).withStrideWidth(strideWidth).withStrideHeight(strideHeight);
+		PoolingAxonsConfig config = new PoolingAxonsConfig(axonsConfig);
+		return config;
 	}
 
 	@Override
-	public Tensor<ML4JTensorOperations> max_pool2d(Tensor<ML4JTensorOperations> input, int i) {
-
-		Matrix inputMatrix = input.toTensorOperations().getMatrix();
-
-
-		int inputWidth = (int)Math.sqrt(inputMatrix.getColumns() / 16);
-		int outputWidth = inputWidth/2;
-		int inputHeight = inputWidth;
-		int outputHeight = outputWidth;
-
-		Axons3DConfig axonsConfig = new Axons3DConfig(new
-				Neurons3D(inputWidth, inputHeight, 16, false),
-				new Neurons3D(outputWidth, outputHeight, 16, false))
-				.withStrideWidth(2).withStrideHeight(2);
-		PoolingAxonsConfig config = new PoolingAxonsConfig(axonsConfig);
-
-		DirectedAxonsComponent<Neurons3D, Neurons3D, ?> maxPoolingAxons
-				= directedComponentFactory
-				.createMaxPoolingAxonsComponent("maxpool", config, false);
-
-		NeuronsActivation neuronsActivation
-				= new ImageNeuronsActivationImpl(inputMatrix.transpose(), config.getAxonsConfig().getLeftNeurons(),
-				ImageNeuronsActivationFormat.ML4J_DEFAULT_IMAGE_FORMAT, true);
-
-		DirectedAxonsComponentActivation activation =  maxPoolingAxons.forwardPropagate(neuronsActivation, directedComponentsContext);
-
-		Matrix outMatrix = activation.getOutput().getActivations(directedComponentsContext.getMatrixFactory());
-
-		ML4JTensor convOutput =  new ML4JTensor(torch, directedComponentsContext.getMatrixFactory(), "out", "out", outMatrix.transpose());
-		convOutput.requires_grad_(true);
-
-		Tensor<ML4JTensorOperations> output = input.performUnaryMappingOperation("ConvOutput", new TensorOperationImpl<>("ConvOutput", l -> convOutput.toTensorOperations(), convOutput.size()), new TensorOperationImpl<>("ConvBackward", l-> backward(activation, axonsConfig.getRightNeurons(), l), input.size()));
-
-		return output;
+	public Tensor max_pool2d(Tensor input, int pool_size) {
+		return max_pool2d(input, torch.Size(pool_size, pool_size));
 
 	}
 
-	private Tensor<ML4JTensorOperations> backward(DirectedAxonsComponentActivation act, Neurons3D neurons, Tensor<ML4JTensorOperations> back) {
+	private Tensor backward(DirectedAxonsComponentActivation act, Neurons3D neurons, Tensor back,
+			boolean requires_grad) {	
+		
+		ML4JTensor ml4jTensor = tensorConverter.createTensor(back);
+		
+		NeuronsActivation inputNeuronsActivation = ml4jTensor.toNeuronsActivation(DimensionScope.OUTPUT, NeuronsActivationFeatureOrientation.ROWS_SPAN_FEATURE_SET);
 
-		Matrix backMatrix = back.toTensorOperations().getMatrix();
+		Matrix backMatrix = inputNeuronsActivation.getActivations(ml4jTensor.getDirectedComponentsContext().getMatrixFactory());
 
-		NeuronsActivation neuronsActivation
-				= new ImageNeuronsActivationImpl(backMatrix.transpose(), neurons,
+		NeuronsActivation neuronsActivation = new ImageNeuronsActivationImpl(backMatrix, neurons,
 				ImageNeuronsActivationFormat.ML4J_DEFAULT_IMAGE_FORMAT, false);
 
-
-
-		DirectedComponentGradient<NeuronsActivation> a = new
-				DirectedComponentGradientImpl<>(neuronsActivation);
-		Matrix outMatrix =  act.backPropagate(a).getOutput().getActivations(directedComponentsContext.getMatrixFactory());
-		Tensor<ML4JTensorOperations> output =  new ML4JTensor(torch, directedComponentsContext.getMatrixFactory(), "out", "out", outMatrix.transpose());
-
+		DirectedComponentGradient<NeuronsActivation> gradient = new DirectedComponentGradientImpl<>(neuronsActivation);
+		
+		NeuronsActivation out = act.backPropagate(gradient).getOutput();
+		
+		Tensor output = new ML4JTensor(torch, ml4jTensor.getDirectedComponentsContext(), 
+				tensorDataConverter, "actback", "actback1",
+				out, requires_grad);
+		
 		return output;
 	}
 
-	@Override
-	public Tensor<ML4JTensorOperations> linear(Tensor<ML4JTensorOperations> input, Parameter<ML4JTensorOperations> weight, Parameter<ML4JTensorOperations> bias) {
-
-		var output = input.matmul(weight.t());
-		if (bias != null) {
-			output = output.add(bias);
-		}
-		return output;
-	}
 
 }

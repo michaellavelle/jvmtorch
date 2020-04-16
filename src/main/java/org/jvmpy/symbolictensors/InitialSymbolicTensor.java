@@ -13,25 +13,30 @@
  */
 package org.jvmpy.symbolictensors;
 
+import java.util.List;
 import java.util.function.Supplier;
 
 /**
- * A SymbolicTensor allows an underlying tensor of type T to be
+ * A SymbolicTensor allows an underlying TensorDataContainer of type T to be
  * manipulated in mathematical expressions, and for gradients
  * to be calculated.
  * 
+ * An InitialSymbolicTensor is a tensor that is created in its own right -
+ * not formed from a manipulation of an existing SymbolicTensor 
+ * 
  * @author Michael Lavelle
  * 
- * @param <T> The type of tensor to wrap inside the SymbolicTensor
+ * @param <T> The type of TensorDataContainer to wrap inside the InitialSymbolicTensor
  */
 public interface InitialSymbolicTensor<T extends TensorDataContainer> extends SymbolicTensor<T> {
 
 	/**
-	 * The name of the input
+	 * Initialises this InitialSymbolicTensor
 	 * 
 	 * @param inputName
 	 * @param init
 	 * @param dimensions
+	 * @param dimensionNames
 	 */
-	void init(String inputName, Supplier<T> init, int[] dimensions);
+	void init(String inputName, Supplier<T> init, int[] dimensions, List<String> dimensionNames);
 }

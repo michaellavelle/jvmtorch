@@ -13,8 +13,6 @@
  */
 package org.jvmtorch.nn.modules;
 
-import org.jvmtorch.torch.TensorOperations;
-
-public interface MSELoss<T extends TensorOperations<T>> extends Loss<T, MSELoss<T>> {
+public interface MSELoss extends Loss<MSELoss> {
 
 }

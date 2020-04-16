@@ -13,20 +13,24 @@
  */
 package org.jvmtorch.impl;
 
+import java.util.List;
+
+import org.jvmpy.python.Tuple;
 import org.jvmtorch.torch.GradFunction;
 import org.jvmtorch.torch.Tensor;
 import org.jvmtorch.torch.TensorOperation;
-import org.jvmtorch.torch.TensorOperations;
-import org.jvmpy.python.Tuple;
 
-import java.util.List;
+public class GradFunctionImpl implements GradFunction {
 
-public class GradFunctionImpl<T extends TensorOperations<T>> extends GradFunction<T> {
-
-	private Tensor<T> variable;
+	private String name;
+	private List<TensorOperation<Tensor>> operations;
+	private Tuple<Tuple<GradFunction>> next_functions;
+	private Tensor variable;
 	
-	public GradFunctionImpl(String name, List<TensorOperation<Tensor<T>>> operations, Tensor<T> variable, Tuple<Tuple<GradFunction<T>>> next_functions) {
-		super(name, operations, next_functions);
+	public GradFunctionImpl(String name, List<TensorOperation<Tensor>> operations, Tensor variable, Tuple<Tuple<GradFunction>> next_functions) {
+		this.name = name;
+		this.operations = operations;
+		this.next_functions = next_functions;
 		this.variable = variable;
 	}
 
@@ -35,8 +39,23 @@ public class GradFunctionImpl<T extends TensorOperations<T>> extends GradFunctio
 		return "<" + name() + " object>";
 	}
 
-	public Tensor<T> variable() {
+	public Tensor variable() {
 		return variable;
+	}
+
+	@Override
+	public List<TensorOperation<Tensor>> operations() {
+		return operations;
+	}
+
+	@Override
+	public String name() {
+		return name;
+	}
+
+	@Override
+	public Tuple<Tuple<GradFunction>> next_functions() {
+		return next_functions;
 	}
 
 }

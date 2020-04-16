@@ -13,12 +13,11 @@
  */
 package org.jvmtorch.nn;
 
-import org.jvmtorch.torch.TensorOperations;
 import org.jvmpy.python.OrderedDict;
 
-public interface BaseModule<M, I extends TensorOperations<I>> {
+public interface BaseModule {
 			
-	OrderedDict<Parameter<I>> parameters();
+	OrderedDict<Parameter> parameters();
 	
 	void zero_grad();
 }

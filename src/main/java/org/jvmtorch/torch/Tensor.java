@@ -13,41 +13,44 @@
  */
 package org.jvmtorch.torch;
 
-import org.jvmpy.python.Tuple;
-
 import java.util.List;
 
-public interface Tensor<T extends TensorOperations<T>> extends TensorOperations<Tensor<T>> {
+import org.jvmpy.python.Tuple;
 
-	void backward(Tensor<T> gradient);
+public interface Tensor extends TensorOperations<Tensor> {
+
+	void backward(Tensor gradient);
+	
 	void backward();
 
-	Tensor<T> grad_fn_(GradFunction<T> grad_fn);
+	Tensor grad_fn_(GradFunction grad_fn);
 
 	boolean requires_grad();
+	
+	Tuple<String> names();
+	
+	Tensor names_(Tuple<String> names);
 
-	Tensor<T> grad_(Tensor<T> grad);
-
+	Tensor grad_(Tensor grad);
 
 	float[] getDataAsFloatArray();
 	
-	Tensor<T> grad();
+	Tensor grad();
 	
-	GradFunction<T> grad_fn();
+	GradFunction grad_fn();
 
-	T toTensorOperations();
-
-	//String name();
-
-	Tensor<T> requires_grad_(boolean requires_grad);
-
-	public Tensor<T> withNextFunctions(String name, List<TensorOperation<Tensor<T>>> operations, Tuple<Tuple<GradFunction<T>>> nextFunctions);
-
-	//Tensor performUnaryMappingOperation(String newTensorName, String operationName, UnaryOperator<Tensor> operation, UnaryOperator<Tensor> backwardOp);
-
-	Tensor<T> performUnaryMappingOperation(String newTensorName, TensorOperation<T> operation, TensorOperation<Tensor<T>> backwardOp);
-
+	TensorData toTensorData();
 	
-	Tensor<T> view(int i, int num_flat_features);
+	Torch torch();
+
+	Tensor requires_grad_(boolean requires_grad);
+
+	public Tensor withNextFunctions(String name, List<TensorOperation<Tensor>> operations, Tuple<Tuple<GradFunction>> nextFunctions);
+
+	Tensor performUnaryMappingOperation(String newTensorName, TensorOperation<TensorData> operation, TensorOperation<Tensor> backwardOp);
+
+	Tensor view(int i, int num_flat_features);
+	
+	Tensor view(Size size);
 
 }

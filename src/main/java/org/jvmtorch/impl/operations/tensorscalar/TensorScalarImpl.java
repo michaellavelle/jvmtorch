@@ -11,18 +11,28 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.jvmtorch.nn;
+package org.jvmtorch.impl.operations.tensorscalar;
 
-import org.jvmtorch.torch.Tensor;
+import org.jvmtorch.torch.TensorOperations;
 
-public interface ModuleAttributes {
+public class TensorScalarImpl<T extends TensorOperations<T>> implements TensorScalar<T> {
 
-	default int num_flat_features(Tensor<?> x) {
-		// int size = x.size()[1:] # all dimensions except the batch dimension
-		int[] size = x.size().getDimensions();
-		var num_features = 1;
-		for (var s : size)
-			num_features *= s;
-		return num_features;
+	private T tensor;
+	private float scalar;
+
+	public TensorScalarImpl(T tensor, float scalar) {
+		this.tensor = tensor;
+		this.scalar = scalar;
 	}
+	
+	@Override
+	public float scalar() {
+		return scalar;
+	}
+
+	@Override
+	public T tensor() {
+		return tensor;
+	}
+
 }

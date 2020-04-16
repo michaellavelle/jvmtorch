@@ -13,26 +13,28 @@
  */
 package org.jvmtorch.nn;
 
-import org.jvmtorch.nn.modules.Module;
-import org.jvmtorch.torch.TensorOperations;
 
-public abstract class Conv2d<M extends Conv2d<M, T>, T extends TensorOperations<T>> extends Module<M, T> implements IModule<M, T> {
+import static org.jvmpy.python.Python.tuple;
+
+public abstract class Conv2d<M extends Conv2d<M>> extends Module<M> implements IModule {
 
 	protected int in_channels;
 	protected int out_channels;
 	protected int kernel_size;
-	protected Parameter<T> weight;
-	protected Parameter<T> bias;
+	protected Parameter weight;
+	protected Parameter bias;
 
-	public Conv2d(NN<T> nn, int in_channels,
+	public Conv2d(NN nn, int in_channels,
 				  int out_channels,
 				  int kernel_size) {
 		super(nn);
 		self.in_channels = in_channels;
 		self.out_channels = out_channels;
 		self.kernel_size = kernel_size;
-		self.weight = Parameter(self().out_channels, self().in_channels * self().kernel_size * self().kernel_size);
-		self.bias = Parameter(self().out_channels, 1);
+		self.weight = Parameter(torch.Size(torch.Size(self().out_channels), 
+				torch.Size(self().in_channels, self().kernel_size, self().kernel_size)
+				).names_(tuple("output_depth", "input_depth", "filter_height", "fitler_width")));
+		self.bias = Parameter(torch.Size(self().out_channels, 1).names_(tuple("output_depth", "None")));
 	}
 
 	@Override
@@ -41,11 +43,11 @@ public abstract class Conv2d<M extends Conv2d<M, T>, T extends TensorOperations<
 		self().weight.grad_(null);
 	}
 
-	public Parameter<T> bias() {
+	public Parameter bias() {
 		return bias;
 	}
 
-	public Parameter<T> weight() {
+	public Parameter weight() {
 		return weight;
 	}
 }

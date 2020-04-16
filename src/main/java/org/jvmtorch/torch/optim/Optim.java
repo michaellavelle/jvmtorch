@@ -13,9 +13,8 @@
  */
 package org.jvmtorch.torch.optim;
 
-import org.jvmtorch.nn.Parameter;
-import org.jvmtorch.torch.TensorOperations;
 import org.jvmpy.python.OrderedDict;
+import org.jvmtorch.nn.Parameter;
 
 /**
  * Factory for different types of Optimiser, with factory method
@@ -25,7 +24,7 @@ import org.jvmpy.python.OrderedDict;
  * @author Michael Lavelle
  *
  */
-public interface Optim<T extends TensorOperations<T>> {
+public interface Optim {
 		
 	/**
 	 * Create a SGD (Standard Gradient Descent) Optimiser
@@ -34,5 +33,5 @@ public interface Optim<T extends TensorOperations<T>> {
 	 * @param learningRate The learning rate.
 	 * @return a SGD (Standard Gradient Descent) Optimiser
 	 */
-	Optimiser SGD(OrderedDict<Parameter<T>> parameters, Number learningRate);
+	Optimiser SGD(OrderedDict<Parameter> parameters, Number learningRate);
 }

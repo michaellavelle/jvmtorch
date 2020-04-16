@@ -16,6 +16,7 @@ package org.jvmpy.python;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.stream.IntStream;
 
 public class ObjectTuple implements Tuple<Object>{
@@ -32,6 +33,10 @@ public class ObjectTuple implements Tuple<Object>{
 	public Object[] getComponents() {
 		return components;
 	}
+	
+	public void put(int index, Object value) {
+		this.components[index] = value;
+	}
 
 	@Override
 	public Iterator<Object> iterator() {
@@ -46,6 +51,16 @@ public class ObjectTuple implements Tuple<Object>{
 			ret[i] = (S)components[i];
 		}
 		return ret;
+	}
+
+	@Override
+	public int length() {
+		return components.length;
+	}
+
+	@Override
+	public List<Object> asList() {
+		return Arrays.asList(components);
 	}
 
 }

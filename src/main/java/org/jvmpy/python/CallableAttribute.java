@@ -16,6 +16,15 @@ package org.jvmpy.python;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+/**
+ * A typed Python callable attribute 
+ * 
+ * @author Michael Lavelle
+ *
+ * @param <T> The type of value being wrapped.
+ * @param <I> The input type of the callable being wrapped.
+ * @param <O> The output type of the callable being wrapped.
+ */
 public class CallableAttribute<T extends Function<I, O>, I, O> extends Attribute<T> implements Function<I, O>, Supplier<T> {
 	
 	@Override

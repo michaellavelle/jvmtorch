@@ -13,9 +13,8 @@
  */
 package org.jvmtorch;
 
-import org.jvmtorch.nn.Functional;
 import org.jvmtorch.nn.NN;
-import org.jvmtorch.torch.TensorOperations;
+import org.jvmtorch.nn.functional.Functional;
 import org.jvmtorch.torch.Torch;
 import org.jvmtorch.torch.optim.Optim;
 
@@ -32,14 +31,14 @@ import org.jvmtorch.torch.optim.Optim;
  * @param <T> The type of TensorOperations required by this
  * factory.
  */
-public interface JvmTorchFactory<T extends TensorOperations<T>> {
+public interface JvmTorchFactory {
 	
-	Torch<T> createTorch();
+	Torch createTorch();
 	
-	Functional<T> createFunctional();
+	Functional createFunctional();
 	
-	NN<T> createNN();
+	NN createNN();
 	
-	Optim<T> createOptim();
+	Optim createOptim();
 	
 }

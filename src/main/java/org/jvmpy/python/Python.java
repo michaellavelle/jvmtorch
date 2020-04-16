@@ -18,7 +18,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-
+/**
+ * Provides methods that can be statically imported
+ * that emulate standard Python functions.
+ * 
+ * @author Michael Lavelle
+ */
 public class Python {
 	
 	public static boolean True = true;
@@ -35,9 +40,15 @@ public class Python {
 		return new IntTuple(first, remaining);
 	}
 
+
 	@SafeVarargs
 	public static <T> Tuple<T> tuple(T first, T...components) {
 		return new GenericTuple<T>(first, components);
+	}
+
+	
+	public static <T> Tuple<T> tuple(List<T> components) {
+		return new GenericTuple<T>(components);
 	}
 
 	@SuppressWarnings("unchecked")

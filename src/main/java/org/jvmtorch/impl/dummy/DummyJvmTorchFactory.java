@@ -14,30 +14,30 @@
 package org.jvmtorch.impl.dummy;
 
 import org.jvmtorch.JvmTorchFactory;
-import org.jvmtorch.nn.Functional;
 import org.jvmtorch.nn.NN;
+import org.jvmtorch.nn.functional.Functional;
 import org.jvmtorch.torch.Torch;
 import org.jvmtorch.torch.optim.Optim;
 
-public class DummyJvmTorchFactory implements JvmTorchFactory<DummyTensorOperations> {
+public class DummyJvmTorchFactory implements JvmTorchFactory {
 
 	@Override
-	public Torch<DummyTensorOperations> createTorch() {
+	public Torch createTorch() {
 		throw new UnsupportedOperationException("Not yet implemented");
 	}
 
 	@Override
-	public Functional<DummyTensorOperations> createFunctional() {
+	public Functional createFunctional() {
 		throw new UnsupportedOperationException("Not yet implemented");
 	}
 
 	@Override
-	public NN<DummyTensorOperations> createNN() {
+	public NN createNN() {
 		throw new UnsupportedOperationException("Not yet implemented");
 	}
 
 	@Override
-	public Optim<DummyTensorOperations> createOptim() {
+	public Optim createOptim() {
 		throw new UnsupportedOperationException("Not yet implemented");
 	}
 }

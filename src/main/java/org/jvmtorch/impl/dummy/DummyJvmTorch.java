@@ -14,19 +14,19 @@
 package org.jvmtorch.impl.dummy;
 
 import org.jvmtorch.JvmTorchFactory;
-import org.jvmtorch.nn.Functional;
 import org.jvmtorch.nn.NN;
+import org.jvmtorch.nn.functional.Functional;
 import org.jvmtorch.torch.Torch;
 import org.jvmtorch.torch.optim.Optim;
 
 public class DummyJvmTorch {
 
-    public static final JvmTorchFactory<DummyTensorOperations> DUMMY_PYTORCH_FACTORY;
+    public static final JvmTorchFactory DUMMY_PYTORCH_FACTORY;
 
-    public static final Torch<DummyTensorOperations> torch;
-    public static final Functional<DummyTensorOperations> F;
-    public static final NN<DummyTensorOperations> nn;
-    public static final Optim<DummyTensorOperations> optim;
+    public static final Torch torch;
+    public static final Functional F;
+    public static final NN nn;
+    public static final Optim optim;
 
     static {
         DUMMY_PYTORCH_FACTORY = new DummyJvmTorchFactory();

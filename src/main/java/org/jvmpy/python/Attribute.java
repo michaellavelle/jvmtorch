@@ -15,6 +15,13 @@ package org.jvmpy.python;
 
 import java.util.function.Supplier;
 
+/**
+ * A typed Python attribute wrapper.
+ * 
+ * @author Michael Lavelle
+ *
+ * @param <T> The type of attribute being wrapped.
+ */
 public class Attribute<T> implements Supplier<T> {
 	
 	public T value;

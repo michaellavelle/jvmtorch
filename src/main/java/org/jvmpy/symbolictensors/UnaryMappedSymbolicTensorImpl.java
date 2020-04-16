@@ -25,6 +25,7 @@ public class UnaryMappedSymbolicTensorImpl<T extends TensorDataContainer> implem
 	protected SymbolicTensor<T> init;
 	private List<Operation<T>> operations;
 	private int[] dimensions;
+	private List<String> dimensionNames;
 
 	protected UnaryMappedSymbolicTensorImpl(String name) {
 		this.name = name;
@@ -39,7 +40,8 @@ public class UnaryMappedSymbolicTensorImpl<T extends TensorDataContainer> implem
 	@Override
 	public void init(SymbolicTensor<T> init) {
 		this.init = init;
-		this.dimensions = init.getDimensions();
+		this.dimensions = init.dimensions();
+		this.dimensionNames = init.dimensionNames();
 	}
 	
 	@Override
@@ -54,14 +56,19 @@ public class UnaryMappedSymbolicTensorImpl<T extends TensorDataContainer> implem
 	@Override
 	public void performInlineOperation(Operation<T> operation) {
 		this.operations.add(operation);
-		this.dimensions = operation.dimensions();
+		TensorDimensionsContainer mappedDimensions = operation.dimensionsMapping().apply(this);
+		this.dimensions = mappedDimensions.dimensions();
+
+		this.dimensionNames = mappedDimensions.dimensionNames();
+		if (dimensionNames != null && dimensionNames.size() != dimensions.length) {
+				throw new IllegalArgumentException();
+		}
 	}
 
 	@Override
 	public SymbolicTensor<T> performUnaryMappingOperation(String newTensorName, Operation<T> operation) {
 		SymbolicTensor<T> mappedTensor = new UnaryMappedSymbolicTensorImpl<>(newTensorName, this);
 		mappedTensor.performInlineOperation( operation);
-		evaluate();
 		return mappedTensor;
 	}
 
@@ -123,7 +130,7 @@ public class UnaryMappedSymbolicTensorImpl<T extends TensorDataContainer> implem
 		}
 		Collections.reverse(operations);
 		
-		SymbolicTensor<T> detached = new InitialSymbolicTensorImpl<>(tensorName, inputName, input, dimensions);
+		SymbolicTensor<T> detached = new InitialSymbolicTensorImpl<>(tensorName, inputName, input, dimensions, dimensionNames);
 		for (Operation<T> op : operations) {
 			detached.performInlineOperation(op);
 		}
@@ -144,8 +151,14 @@ public class UnaryMappedSymbolicTensorImpl<T extends TensorDataContainer> implem
 	}
 
 	@Override
-	public int[] getDimensions() {
+	public int[] dimensions() {
 		return dimensions;
 	}
+
+	@Override
+	public List<String> dimensionNames() {
+		return dimensionNames;
+	}
+
 	
 }

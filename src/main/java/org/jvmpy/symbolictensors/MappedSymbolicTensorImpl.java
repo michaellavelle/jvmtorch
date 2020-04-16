@@ -28,13 +28,18 @@ public class MappedSymbolicTensorImpl<S extends TensorDataContainer, T extends T
 	private Class<S> sClass;
 	private Class<T> tClass;
 	private int[] dimensions;
+	private List<String> dimensionNames;
 
-	protected MappedSymbolicTensorImpl(String name, Class<S> sClass, Class<T> tClass, int[] dims) {
+	protected MappedSymbolicTensorImpl(String name, Class<S> sClass, Class<T> tClass, int[] dims, List<String> dimensionNames) {
 		this.name = name;
 		this.operations = new ArrayList<>();
 		this.sClass = sClass;
 		this.tClass = tClass;
 		this.dimensions = dims;
+		this.dimensionNames = dimensionNames;
+		if (dimensionNames != null && dimensionNames.size() != dimensions.length) {
+			throw new IllegalArgumentException();
+		}
 	}
 	
 	public List<Operation<T>> getOperations() {
@@ -42,7 +47,7 @@ public class MappedSymbolicTensorImpl<S extends TensorDataContainer, T extends T
 	}
 
 	public MappedSymbolicTensorImpl(String name, SymbolicTensor<S> init, Function<S, T> mapper, Class<S> sClass, Class<T> tClass) {
-		this(name, sClass, tClass, init.getDimensions());
+		this(name, sClass, tClass, init.dimensions(), init.dimensionNames());
 		init(init, mapper);
 	}
 
@@ -58,7 +63,7 @@ public class MappedSymbolicTensorImpl<S extends TensorDataContainer, T extends T
 	public void init(SymbolicTensor<S> init, Function<S, T> mapper) {
 		this.init = init;
 		this.mapper = mapper;
-		this.dimensions = init.getDimensions();
+		this.dimensions = init.dimensions();
 	}
 	
 	@Override
@@ -73,14 +78,18 @@ public class MappedSymbolicTensorImpl<S extends TensorDataContainer, T extends T
 	@Override
 	public void performInlineOperation(Operation<T> operation) {
 		this.operations.add(operation);
-		this.dimensions = operation.dimensions();
+		TensorDimensionsContainer mappedDimensions = operation.dimensionsMapping().apply(this);
+		this.dimensions = mappedDimensions.dimensions();
+		this.dimensionNames = mappedDimensions.dimensionNames();
+		if (dimensionNames != null && dimensionNames.size() != dimensions.length) {
+				throw new IllegalArgumentException();
+		}
 	}
 
 	@Override
 	public SymbolicTensor<T> performUnaryMappingOperation(String newTensorName, Operation<T> operation) {
 		SymbolicTensor<T> mappedTensor = new UnaryMappedSymbolicTensorImpl<T>(newTensorName, this);
 		mappedTensor.performInlineOperation(operation);
-		evaluate();
 		return mappedTensor;
 	}
 
@@ -134,8 +143,13 @@ public class MappedSymbolicTensorImpl<S extends TensorDataContainer, T extends T
 	}
 
 	@Override
-	public int[] getDimensions() {
+	public int[] dimensions() {
 		return dimensions;
+	}
+
+	@Override
+	public List<String> dimensionNames() {
+		return dimensionNames;
 	}
 	
 	

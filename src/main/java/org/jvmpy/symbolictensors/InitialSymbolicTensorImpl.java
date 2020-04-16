@@ -25,22 +25,27 @@ public class InitialSymbolicTensorImpl<T extends TensorDataContainer> implements
 	private String inputName;
 	private List<Operation<T>> operations;
 	private int[] dimensions;
+	private List<String> dimensionNames;
 
 	protected InitialSymbolicTensorImpl(String name) {
 		this.name = name;
 		this.operations = new ArrayList<>();
 	}
 	
-	public InitialSymbolicTensorImpl(String name, String inputName, Supplier<T> init, int[] dimensions) {
+	public InitialSymbolicTensorImpl(String name, String inputName, Supplier<T> init, int[] dimensions, List<String> dimensionNames) {
 		this(name);
-		init(inputName, init, dimensions);
+		init(inputName, init, dimensions, dimensionNames);
 	}
 
 	@Override
-	public void init(String inputName, Supplier<T> init, int[] dimensions) {
+	public void init(String inputName, Supplier<T> init, int[] dimensions, List<String> dimensionNames) {
 		this.inputName = inputName;
 		this.init = init;
 		this.dimensions = dimensions;
+		this.dimensionNames = dimensionNames;
+		if (dimensionNames != null && dimensionNames.size() != dimensions.length) {
+			throw new IllegalArgumentException();
+		}
 	}
 	
 	@Override
@@ -58,8 +63,13 @@ public class InitialSymbolicTensorImpl<T extends TensorDataContainer> implements
 	@Override
 	public void performInlineOperation(Operation<T> operation) {
 		this.operations.add(operation);
-		this.dimensions = operation.dimensions();
-		evaluate();
+		TensorDimensionsContainer mappedDimensions = operation.dimensionsMapping().apply(this);
+		this.dimensions = mappedDimensions.dimensions();
+		this.dimensionNames = mappedDimensions.dimensionNames();
+		if (dimensionNames != null && dimensionNames.size() != dimensions.length) {
+				throw new IllegalArgumentException();
+		}
+
 	}
 
 	@Override
@@ -104,7 +114,7 @@ public class InitialSymbolicTensorImpl<T extends TensorDataContainer> implements
 
 	@Override
 	public SymbolicTensor<T> detach(String tensorName) {
-		return new InitialSymbolicTensorImpl<>(tensorName, inputName, init, dimensions);
+		return new InitialSymbolicTensorImpl<>(tensorName, inputName, init, dimensions, dimensionNames);
 	}
 
 	@Override
@@ -118,8 +128,12 @@ public class InitialSymbolicTensorImpl<T extends TensorDataContainer> implements
 	}
 
 	@Override
-	public int[] getDimensions() {
+	public int[] dimensions() {
 		return dimensions;
 	}
-	
+
+	@Override
+	public List<String> dimensionNames() {
+		return dimensionNames;
+	}
 }

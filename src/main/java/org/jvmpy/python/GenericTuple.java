@@ -14,12 +14,14 @@
 package org.jvmpy.python;
 
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 
 public class GenericTuple<T> implements Tuple<T>{
 
-	private T[] components;
+	protected T[] components;
 	
 	@SuppressWarnings("unchecked")
 	public GenericTuple(T first, T...remaining) {
@@ -30,14 +32,40 @@ public class GenericTuple<T> implements Tuple<T>{
 				this.components[i + 1] = (T)remaining[i];
 			}
 		} else {
-			throw new IllegalArgumentException("First is null");
+			throw new IllegalArgumentException("First component of generic tuple cannot be null");
 		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	public GenericTuple(List<T> components) {
+			T first = components.isEmpty() ? null: components.get(0);
+			if (first == null && !components.isEmpty()) {
+				throw new IllegalArgumentException("First is null");
+			} else {
+				if (!components.isEmpty()) {
+					this.components = (T[])Array.newInstance(first.getClass(), components.size()); 
+					for (int i = 0; i < components.size(); i++) {
+						this.components[i] = (T)components.get(i);
+					}
+				}
+			}
+	}
+	
+	@Override
+	public List<T> asList() {
+		return components == null ? new ArrayList<>() : Arrays.asList(components);
 	}
 	
 	@SuppressWarnings("unchecked")
 	protected GenericTuple(T...all) {
 		this.components = all;
 	}
+	
+
+	public void put(int index, T value) {
+		this.components[index] = value;
+	}
+
 
 	@Override
 	public T[] getComponents() {
@@ -61,7 +89,12 @@ public class GenericTuple<T> implements Tuple<T>{
 	
 	@Override
 	public String toString() {
-		return Arrays.asList(components).toString();
+		return components == null ? "()" : Arrays.asList(components).toString().replace('[', '(').replace(']', ')');
+	}
+
+	@Override
+	public int length() {
+		return components == null ? 0 : components.length;
 	}
 	
 

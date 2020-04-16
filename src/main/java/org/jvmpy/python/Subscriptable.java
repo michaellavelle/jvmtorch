@@ -23,6 +23,8 @@ public interface Subscriptable<T> {
 		T firstOne = getComponents()[first];
 		return firstOne;
 	}
+	
+	int length();
 
 	default Object get(int first, int... remaining) {
 		T component = getComponents()[first];

@@ -17,19 +17,19 @@ import java.util.List;
 import java.util.function.Supplier;
 
 /**
- * A SymbolicTensor allows an underlying tensor of type T to be
+ * A SymbolicTensor allows an underlying TensorDataContainer of type T to be
  * manipulated in mathematical expressions, and for gradients
  * to be calculated.
  * 
  * SymbolicTensor instances can be lazy-evaulated - for this use
- * case the evaluate() method evaluates the value of the underlying
- * tensor.
+ * case the evaluate()/get() methods evaluate the value of the underlying
+ * tensor data.
  * 
  * @author Michael Lavelle
  * 
  * @param <T> The type of tensor to wrap inside the SymbolicTensor
  */
-public interface SymbolicTensor<T extends TensorDataContainer> extends Supplier<T>, Operatable<T, SymbolicTensor<T>> {
+public interface SymbolicTensor<T extends TensorDataContainer> extends Supplier<T>, Operatable<T, SymbolicTensor<T>>, TensorDimensionsContainer {
 
 	/**
 	 * @return The current evaluation of this tensor.
@@ -55,7 +55,9 @@ public interface SymbolicTensor<T extends TensorDataContainer> extends Supplier<
 
 	String getName();
 	
-	int[] getDimensions();
+	int[] dimensions();
+	
+	List<String> dimensionNames();
 	
 	String getInputName();
 	

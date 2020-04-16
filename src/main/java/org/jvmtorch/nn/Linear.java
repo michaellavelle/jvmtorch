@@ -13,27 +13,36 @@
  */
 package org.jvmtorch.nn;
 
-import org.jvmtorch.nn.modules.Module;
-import org.jvmtorch.torch.TensorOperations;
+import static org.jvmpy.python.Python.tuple;
 
-public abstract class Linear<M extends Linear<M, T>, T extends TensorOperations<T>> extends Module<M, T> implements IModule<M, T> {
+
+public abstract class Linear<M extends Linear<M>> extends Module<M> implements IModule {
 
 	protected int in_features;
 	protected int out_features;
-	protected Parameter<T> weight;
-	protected Parameter<T> bias;
+	protected Parameter weight;
+	protected Parameter bias;
 
-	public Linear(NN<T> nn, int in_features, int out_features) {
+	public Linear(NN nn, int in_features, int out_features) {
 		super(nn);
 		self.in_features = in_features;
 		self.out_features = out_features;
-		self.weight = Parameter(self.out_features, self.in_features);
-		self.bias = Parameter(1, self.out_features);
+		self.weight = Parameter(torch.Size(self.out_features, self.in_features).names_(tuple("output_feature", "input_feature")));
+		self.bias = Parameter(torch.Size(1, self.out_features).names_(tuple("example", "output_feature")));
 	}
 
 	@Override
 	public void zero_grad() {
 		self.bias.grad_(null);
 		self.weight.grad_(null);
+	}
+	
+
+	public Parameter bias() {
+		return bias;
+	}
+
+	public Parameter weight() {
+		return weight;
 	}
 }

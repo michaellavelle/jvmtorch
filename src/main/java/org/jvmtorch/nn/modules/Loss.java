@@ -13,14 +13,13 @@
  */
 package org.jvmtorch.nn.modules;
 
-import org.jvmtorch.nn.BaseModule;
-import org.jvmtorch.torch.Tensor;
-import org.jvmtorch.torch.TensorOperations;
-
 import java.util.function.BinaryOperator;
 
-public interface Loss<T extends TensorOperations<T>, L extends Loss<T, L>> extends BaseModule<L, T>, BinaryOperator<Tensor<T>> {
+import org.jvmtorch.nn.BaseModule;
+import org.jvmtorch.torch.Tensor;
 
-	Tensor<T> forward(L self, Tensor<T> input, Tensor<T> target);
+public interface Loss<L extends Loss<L>> extends BaseModule, BinaryOperator<Tensor> {
+
+	Tensor forward(L self, Tensor input, Tensor target);
 
 }

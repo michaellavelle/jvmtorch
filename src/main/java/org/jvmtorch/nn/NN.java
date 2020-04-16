@@ -13,25 +13,26 @@
  */
 package org.jvmtorch.nn;
 
+import org.jvmtorch.nn.functional.Functional;
 import org.jvmtorch.nn.modules.MSELoss;
+import org.jvmtorch.torch.Size;
 import org.jvmtorch.torch.Tensor;
-import org.jvmtorch.torch.TensorOperations;
 import org.jvmtorch.torch.Torch;
 
-public interface NN<T extends TensorOperations<T>>  {
+public interface NN  {
 
-	public Conv2d<?, T> Conv2d(int... params);
+	public Conv2d<?> Conv2d(int... params);
 	
-	public Linear<?, T> Linear(int... params);
+	public Linear<?> Linear(int... params);
 
-	public MSELoss<T> MSELoss();
+	public MSELoss MSELoss();
 
-	Torch<T> torch();
+	Torch torch();
 	
-	Functional<T> f();
+	Functional f();
 
-	Parameter<T> Parameter(Tensor<T> tensor);
+	Parameter Parameter(Tensor tensor);
 
-	Parameter<T> Parameter(int[] dims);
+	Parameter Parameter(Size size);
 
 }

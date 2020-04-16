@@ -13,34 +13,38 @@
  */
 package org.jvmtorch.torch;
 
-import org.jvmpy.python.Tuple;
-
 import java.util.List;
 
+import org.jvmpy.python.Tuple;
 
-public abstract class GradFunction<T extends TensorOperations<T>> {
+/**
+ * Encapsulates a JVMTorch GradFunction.
+ * 
+ * @author Michael Lavelle
+ *
+ */
+public interface GradFunction {
 
-	private String name;
-	private List<TensorOperation<Tensor<T>>> operations;
-	private Tuple<Tuple<GradFunction<T>>> next_functions;
+	/**
+	 * @return A list of TensorOperation within this grad
+	 * function.
+	 */
+	List<TensorOperation<Tensor>> operations();
 	
-	public Tuple<Tuple<GradFunction<T>>> next_functions() {
-		return next_functions;
-	}
-		
-	public GradFunction(String name, List<TensorOperation<Tensor<T>>> operations, Tuple<Tuple<GradFunction<T>>> next_functions) {
-		this.name = name;
-		this.next_functions = next_functions;
-		this.operations = operations;
-	}
+	/**
+	 * @return The name of this grad function.
+	 */
+	String name();
 	
-	public String name() {
-		return name;
-	}
+	/**
+	 * @return A tuple of GradFunctionss within the
+	 * computation graph.
+	 */
+	Tuple<Tuple<GradFunction>> next_functions();
 	
-	public abstract Tensor<T> variable();
-	
-	public List<TensorOperation<Tensor<T>>> operations() {
-		return operations;
-	}
+	/**
+	 * @return The target variable
+	 */
+	Tensor variable();
+
 }

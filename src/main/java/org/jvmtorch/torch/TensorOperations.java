@@ -13,9 +13,10 @@
  */
 package org.jvmtorch.torch;
 
-import org.jvmpy.symbolictensors.TensorDataContainer;
 
 import java.util.function.Supplier;
+
+import org.jvmpy.symbolictensors.TensorDataContainer;
 
 public interface TensorOperations<T> extends Supplier<T>, TensorDataContainer {
 
@@ -39,15 +40,16 @@ public interface TensorOperations<T> extends Supplier<T>, TensorDataContainer {
 
 	T matmul(T other);
 
-	T transpose();
-
 	T t();
 
 	Size size();
+	
+	T size_(Size size);
+	
+	
+	T view(int i, int j);
+	
+	T view(Size size);
 
-
-
-
-	//<U extends TensorOperations<U>> T performUnaryMappingOperation(String newTensorName, String operationName, UnaryOperator<T> operation, Function<T, U> f1, Function<U, T> f2, UnaryOperator<Tensor> backwardOp);
 
 }

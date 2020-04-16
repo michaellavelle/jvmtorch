@@ -1,0 +1,123 @@
+/*
+ * Copyright 2020 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */
+package org.jvmtorch.impl;
+
+import org.jvmtorch.torch.Size;
+import org.jvmtorch.torch.TensorOperations;
+import org.jvmtorch.torch.Torch;
+
+public class ScalarOperations implements TensorOperations<ScalarOperations> {
+
+	private float value;
+	private Torch torch;
+	
+	public ScalarOperations(Torch torch, float value) {
+		this.value = value;
+		this.torch = torch;
+	}
+	
+	@Override
+	public ScalarOperations get() {
+		return this;
+	}
+
+	@Override
+	public float[] getDataAsFloatArray() {
+		return new float[] {value};
+	}
+
+	@Override
+	public ScalarOperations mul(float otherValue) {
+		return new ScalarOperations(torch, value * otherValue);
+	}
+
+	@Override
+	public ScalarOperations add(float otherValue) {
+		return new ScalarOperations(torch, value + otherValue);
+	}
+
+	@Override
+	public ScalarOperations mul(ScalarOperations other) {
+		return mul(other.value);
+	}
+
+	@Override
+	public int numel() {
+		return 1;
+	}
+
+	@Override
+	public ScalarOperations add(ScalarOperations other) {
+		return add(other.value);
+	}
+
+	@Override
+	public ScalarOperations mean() {
+		return new ScalarOperations(torch, value);
+	}
+
+	@Override
+	public ScalarOperations mul_(ScalarOperations other) {
+		value = value * other.value;
+		return this;
+	}
+
+	@Override
+	public ScalarOperations sub_(ScalarOperations other) {
+		value = value - other.value;
+		return this;
+	}
+
+	@Override
+	public ScalarOperations add_(ScalarOperations other) {
+		value = value + other.value;
+		return this;
+	}
+
+	@Override
+	public ScalarOperations matmul(ScalarOperations other) {
+		return null;
+	}
+
+	@Override
+	public ScalarOperations t() {
+		return new ScalarOperations(torch, value);
+	}
+
+	@Override
+	public Size size() {
+		return torch.Size();
+	}
+
+	@Override
+	public ScalarOperations size_(Size size) {
+		throw new UnsupportedOperationException("Not yet implemented");
+	}
+
+	@Override
+	public ScalarOperations view(int i, int j) {
+		throw new UnsupportedOperationException("Not yet implemented");
+	}
+
+	@Override
+	public ScalarOperations view(Size size) {
+		throw new UnsupportedOperationException("Not yet implemented");
+	}
+
+	@Override
+	public String toString() {
+		return Float.valueOf(value).toString();
+	}
+
+}
