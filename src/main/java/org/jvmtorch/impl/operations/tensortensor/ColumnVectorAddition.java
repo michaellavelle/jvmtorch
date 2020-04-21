@@ -21,9 +21,9 @@ import org.jvmtorch.torch.Size;
 import org.jvmtorch.torch.TensorOperations;
 import org.jvmtorch.torch.Torch;
 
-public class TensorAddition<T extends TensorOperations<T>> extends DifferentiableTensorTensorFunctionBase<T> {
+public class ColumnVectorAddition<T extends TensorOperations<T>> extends DifferentiableTensorTensorFunctionBase<T> {
 	
-	public TensorAddition(Torch torch) {
+	public ColumnVectorAddition(Torch torch) {
 		super(torch);
 	}
 	
@@ -36,11 +36,7 @@ public class TensorAddition<T extends TensorOperations<T>> extends Differentiabl
 	 * @return
 	 */
 	public <S extends TensorOperations<S>> UnaryOperator<S> forwardPropFunction(S tensorDelta) {
-		if (tensorDelta.numel() == 1) {
-			return t -> t.add(tensorDelta.getDataAsFloatArray()[0]);
-		} else {
-			return t -> t.numel() == 1 ? tensorDelta.add(t.getDataAsFloatArray()[0]) : t.add(tensorDelta);
-		}
+			return t -> t.add(tensorDelta);
 	}
 	
 	/**
@@ -53,23 +49,17 @@ public class TensorAddition<T extends TensorOperations<T>> extends Differentiabl
 	 * @return
 	 */
 	public <S extends TensorOperations<S>> Pair<UnaryOperator<S>, UnaryOperator<S>> backPropFunctions(Pair<S, S> variables) {
-		if ( variables.getRight().numel() == 1) {
-			return new ImmutablePair<>(g -> g, g -> variables.getRight().mul(0).add(g.numel()).view(torch.Size()));
-		} else if( variables.getLeft().numel() == 1){
-			return new ImmutablePair<>(g -> variables.getLeft().mul(0).add(g.numel()).view(torch.Size()), g -> g);
-		} else {
-			return new ImmutablePair<>(g -> g, g -> g);
-		}
+		return new ImmutablePair<>(g -> g, g -> g.rowSums());
 	}
 
 	@Override
 	public UnaryOperator<Size> sizeFunction(Pair<Size, Size> variableSizes) {
-		return s -> variableSizes.getRight().asList().isEmpty() ? s : variableSizes.getLeft();
+		return s -> variableSizes.getLeft();
 	}
 
 	@Override
 	public String name() {
-		return "Add";
+		return "AddColumnVector";
 	}
 
 }

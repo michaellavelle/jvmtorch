@@ -14,5 +14,8 @@
 package org.jvmpy.symbolictensors;
 
 public interface TensorDataContainer {
+	
     float[] getDataAsFloatArray();
+    
+    void close();
 }

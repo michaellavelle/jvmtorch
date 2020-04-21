@@ -165,4 +165,25 @@ public class TensorDataAdapter<A extends TensorOperations<A>> implements TensorD
 	public TensorData view(Size size) {
 		return createTensorDataFromTensorOperations((adapted.view(size)));
 	}
+
+	@Override
+	public TensorData columnSums() {
+		return createTensorDataFromTensorOperations((adapted.columnSums()));
+	}
+	
+	@Override
+	public TensorData rowSums() {
+		return createTensorDataFromTensorOperations((adapted.rowSums()));
+	}
+
+	@Override
+	public void close() {
+		this.adapted = null;
+		this.tensorDataConverter = null;
+	}
+
+	@Override
+	public TensorData norm() {
+		return createTensorDataFromTensorOperations((adapted.norm()));
+	}
 }

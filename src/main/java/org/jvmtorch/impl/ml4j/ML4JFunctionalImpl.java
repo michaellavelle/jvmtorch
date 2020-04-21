@@ -52,7 +52,7 @@ public class ML4JFunctionalImpl extends FunctionalImpl implements Functional {
 		NeuronsActivationFeatureOrientation target = null;
 		if (activationFunctionType.getBaseType() == ActivationFunctionBaseType.SOFTMAX) {
 			target = NeuronsActivationFeatureOrientation.ROWS_SPAN_FEATURE_SET;
-		}
+		} 
 		
 		NeuronsActivation neuronsActivation = ml4jTensor.toNeuronsActivation(DimensionScope.INPUT, target);		
 		
@@ -66,15 +66,16 @@ public class ML4JFunctionalImpl extends FunctionalImpl implements Functional {
 		NeuronsActivation outActivation = act.getOutput();
 			
 						
-		ML4JTensor outTensor = new ML4JTensor(torch, ml4jTensor.getDirectedComponentsContext(), tensorDataConverter, "out",
-				"out", outActivation, input.requires_grad());
+		ML4JTensor outTensor = new ML4JTensor(torch, ml4jTensor.getDirectedComponentsContext(), tensorDataConverter, 
+				outActivation, input.requires_grad());
 					
-		Tensor output = input.performUnaryMappingOperation(activationFunctionType.toString() + "Output",
+		Tensor output = input.performUnaryMappingOperation(
 				new TensorOperationImpl<>(torch, activationFunctionType.toString(), l -> outTensor.toTensorData(),
 						s -> outTensor.size()),
-				new TensorOperationImpl<>(torch, activationFunctionType.toString() + "Backward",
-						l -> backward(activationFunctionType, act, outActivation.getNeurons(), l, input.requires_grad()), s -> input.size()));
+				new TensorOperationImpl<>(torch, activationFunctionType.getId() + "Backward",
+						l -> backward(activationFunctionType, act, outActivation.getNeurons(), l, input.requires_grad()), s -> s));
 
+	
 		return output;
 	}
 
@@ -88,7 +89,7 @@ public class ML4JFunctionalImpl extends FunctionalImpl implements Functional {
 			boolean requires_grad) {
 		
 		ML4JTensor ml4jTensor = tensorConverter.createTensor(back);
-		
+				
 		NeuronsActivationFeatureOrientation target = null;
 		if (activationFunctionType.getBaseType() == ActivationFunctionBaseType.SOFTMAX) {
 			target = NeuronsActivationFeatureOrientation.ROWS_SPAN_FEATURE_SET;
@@ -105,12 +106,13 @@ public class ML4JFunctionalImpl extends FunctionalImpl implements Functional {
 			outNeuronsActivation = act.backPropagate(a).getOutput();	
 		} 
 		
-		Tensor output = new ML4JTensor(torch, directedComponentsContext, tensorDataConverter, "out", "out",
-				outNeuronsActivation, requires_grad);
+		Tensor output = new ML4JTensor(torch, directedComponentsContext, tensorDataConverter, 
+				outNeuronsActivation, requires_grad);		
 		
 		return output;
 
 	}
+	
 
 	@Override
 	public Tensor softmax(Tensor input) {
@@ -161,13 +163,13 @@ public class ML4JFunctionalImpl extends FunctionalImpl implements Functional {
 		
 		NeuronsActivation outNeuronsActivation= activation.getOutput();
 
-		Tensor convOutput = new ML4JTensor(torch, ml4jTensor.getDirectedComponentsContext(), tensorDataConverter,
-				"maxpoolout", "maxpoolout2", outNeuronsActivation, input.requires_grad());
+		Tensor maxPoolOutput = new ML4JTensor(torch, ml4jTensor.getDirectedComponentsContext(), tensorDataConverter,
+				outNeuronsActivation, input.requires_grad());
 		
-		convOutput.requires_grad_(true);
-		Tensor output = input.performUnaryMappingOperation("ConvOutput",
-				new TensorOperationImpl<>(torch, "ConvOutput", l -> convOutput.toTensorData(), s -> convOutput.size()),
-				new TensorOperationImpl<>(torch, "ConvBackward",
+		maxPoolOutput.requires_grad_(true);
+		Tensor output = input.performUnaryMappingOperation(
+				new TensorOperationImpl<>(torch, "MaxPool", l -> maxPoolOutput.toTensorData(), s -> maxPoolOutput.size()),
+				new TensorOperationImpl<>(torch, "MaxPoolBackward",
 						l -> backward(activation, config.getAxonsConfig().getRightNeurons(), l, input.requires_grad()), s -> input.size()));
 
 		return output;
@@ -226,7 +228,7 @@ public class ML4JFunctionalImpl extends FunctionalImpl implements Functional {
 		NeuronsActivation out = act.backPropagate(gradient).getOutput();
 		
 		Tensor output = new ML4JTensor(torch, ml4jTensor.getDirectedComponentsContext(), 
-				tensorDataConverter, "actback", "actback1",
+				tensorDataConverter,
 				out, requires_grad);
 		
 		return output;

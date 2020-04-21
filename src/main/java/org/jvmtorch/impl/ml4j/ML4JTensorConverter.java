@@ -21,13 +21,8 @@ public class ML4JTensorConverter implements TensorConverter<ML4JTensor> {
 		if (tensor instanceof ML4JTensor) {
 			return ML4JTensor.class.cast(tensor);
 		} else {
-			ML4JTensor ml4jTensor = new ML4JTensor(tensor.torch(), directedComponentsContext, tensorDataConverter, "name", "inputName", 
+			return new ML4JTensor(tensor.torch(), directedComponentsContext, tensorDataConverter, 
 					tensor.toTensorData(), tensor.requires_grad());
-			//ml4jTensor.size_(tensor.size());
-			//if (tensor.names().asList().size() == ml4jTensor.names().asList().size()) {
-				//ml4jTensor.names_(tensor.names());
-			//}
-			return ml4jTensor;
 		}
 	}
 }

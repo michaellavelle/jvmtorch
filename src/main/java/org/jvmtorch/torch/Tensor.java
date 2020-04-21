@@ -37,6 +37,8 @@ public interface Tensor extends TensorOperations<Tensor> {
 	
 	Tensor grad();
 	
+	float item();
+	
 	GradFunction grad_fn();
 
 	TensorData toTensorData();
@@ -45,9 +47,9 @@ public interface Tensor extends TensorOperations<Tensor> {
 
 	Tensor requires_grad_(boolean requires_grad);
 
-	public Tensor withNextFunctions(String name, List<TensorOperation<Tensor>> operations, Tuple<Tuple<GradFunction>> nextFunctions);
+	public Tensor withNextFunctions(String name, List<TensorOperation<Tensor, Size>> operations, Tuple<Tuple<GradFunction>> nextFunctions);
 
-	Tensor performUnaryMappingOperation(String newTensorName, TensorOperation<TensorData> operation, TensorOperation<Tensor> backwardOp);
+	Tensor performUnaryMappingOperation(TensorOperation<TensorData, Size> operation, TensorOperation<Tensor, Size> backwardOp);
 
 	Tensor view(int i, int num_flat_features);
 	

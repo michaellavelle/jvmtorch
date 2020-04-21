@@ -11,10 +11,8 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.jvmpy.symbolictensors;
+package org.jvmtorch.nn.modules;
 
-public interface UnaryMappedSymbolicTensor<T extends TensorDataContainer> extends SymbolicTensor<T> {
+public interface MultiClassCrossEntropyLoss extends Loss<MultiClassCrossEntropyLoss> {
 
-	void init(SymbolicTensor<T> init);
-	
 }

@@ -33,6 +33,7 @@ public abstract class Module<M> extends PythonClass<M> implements IModule {
 	protected NN nn;
 	protected OrderedDict<Parameter> moduleParameters;
 	protected OrderedDict<IModule> subModules;
+	protected String alias;
 
 	protected Torch torch;
 
@@ -46,12 +47,25 @@ public abstract class Module<M> extends PythonClass<M> implements IModule {
 		return nn.Parameter(size);
 	}
 	
+	protected Parameter Parameter(Tensor tensor) {
+		return nn.Parameter(tensor);
+	}
+	
 	protected Size Size(int... sizes) {
 		return torch.Size(sizes);
 	}
 	
 	protected Size Size(Size... sizes) {
 		return torch.Size(sizes);
+	}
+	
+	public M alias_(String alias) {
+		this.alias = alias;
+		return self;
+	}
+	
+	public String alias() {
+		return alias;
 	}
 	
 	protected OrderedDict<IModule> getSubModules() {

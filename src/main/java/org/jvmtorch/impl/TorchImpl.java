@@ -7,6 +7,8 @@ import org.jvmtorch.torch.Torch;
 
 public abstract class TorchImpl<T extends TensorOperations<T>> implements Torch {
 
+	public static int LONG = 1;
+
 	protected TensorDataConverter<T> tensorDataConverter;
 	
 	public TorchImpl(TensorDataConverter<T> tensorDataConverter) {

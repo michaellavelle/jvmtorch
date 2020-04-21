@@ -70,7 +70,7 @@ public class ScalarOperations implements TensorOperations<ScalarOperations> {
 	public ScalarOperations add(ScalarOperations other) {
 		return add(other.value);
 	}
-	
+
 	@Override
 	public ScalarOperations sub(float otherValue) {
 		return new ScalarOperations(torch, value - otherValue);
@@ -144,6 +144,24 @@ public class ScalarOperations implements TensorOperations<ScalarOperations> {
 		return new ScalarOperations(torch, value);
 	}
 
+	@Override
+	public ScalarOperations columnSums() {
+		throw new UnsupportedOperationException("Not yet implemented");
+	}
 	
+	@Override
+	public ScalarOperations rowSums() {
+		throw new UnsupportedOperationException("Not yet implemented");
+	}
+
+	@Override
+	public void close() {
+		//this.torch = null;
+	}
+
+	@Override
+	public ScalarOperations norm() {
+		throw new UnsupportedOperationException("Not yet implemented");
+	}
 
 }

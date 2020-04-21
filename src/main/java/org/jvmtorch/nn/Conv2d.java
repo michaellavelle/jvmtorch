@@ -31,9 +31,11 @@ public abstract class Conv2d<M extends Conv2d<M>> extends Module<M> implements I
 		self.in_channels = in_channels;
 		self.out_channels = out_channels;
 		self.kernel_size = kernel_size;
+		
 		self.weight = Parameter(torch.Size(torch.Size(self().out_channels), 
 				torch.Size(self().in_channels, self().kernel_size, self().kernel_size)
-				).names_(tuple("output_depth", "input_depth", "filter_height", "fitler_width")));
+				).names_(tuple("output_depth", "input_depth", "filter_height", "filter_width")));
+	
 		self.bias = Parameter(torch.Size(self().out_channels, 1).names_(tuple("output_depth", "None")));
 	}
 

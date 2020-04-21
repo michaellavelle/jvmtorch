@@ -21,12 +21,10 @@ import org.jvmtorch.torch.Size;
 import org.jvmtorch.torch.TensorOperations;
 import org.jvmtorch.torch.Torch;
 
-public class TensorDivision<T extends TensorOperations<T>> implements DifferentiableTensorTensorFunction<T> {
-
-	@SuppressWarnings("unused")
-	private Torch torch;
-
+public class TensorDivision<T extends TensorOperations<T>> extends DifferentiableTensorTensorFunctionBase<T> {
+	
 	public TensorDivision(Torch torch) {
+		super(torch);
 		this.torch = torch;
 	}
 	

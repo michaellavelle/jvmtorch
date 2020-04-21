@@ -5,6 +5,7 @@ import org.jvmtorch.nn.Conv2d;
 import org.jvmtorch.nn.Linear;
 import org.jvmtorch.nn.functional.Functional;
 import org.jvmtorch.nn.modules.MSELoss;
+import org.jvmtorch.nn.modules.MultiClassCrossEntropyLoss;
 import org.jvmtorch.torch.TensorConverter;
 import org.jvmtorch.torch.TensorDataConverter;
 import org.jvmtorch.torch.Torch;
@@ -46,4 +47,9 @@ public class ML4JNNImpl extends NNImpl{
     public MSELoss MSELoss() {
         return new ML4JMSELossImpl(torch, tensorDataConverter, tensorConverter);
     }
+
+	@Override
+	public MultiClassCrossEntropyLoss MultiClassCrossEntropyLoss() {
+        return new ML4JMultiClassCrossEntropyLossImpl(torch, tensorDataConverter, tensorConverter);
+	}
 }

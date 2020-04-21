@@ -15,6 +15,8 @@ package org.jvmtorch.nn;
 
 import static org.jvmpy.python.Python.tuple;
 
+import org.jvmtorch.torch.Tensor;
+
 
 public abstract class Linear<M extends Linear<M>> extends Module<M> implements IModule {
 
@@ -27,8 +29,17 @@ public abstract class Linear<M extends Linear<M>> extends Module<M> implements I
 		super(nn);
 		self.in_features = in_features;
 		self.out_features = out_features;
-		self.weight = Parameter(torch.Size(self.out_features, self.in_features).names_(tuple("output_feature", "input_feature")));
-		self.bias = Parameter(torch.Size(1, self.out_features).names_(tuple("example", "output_feature")));
+		self.weight = Parameter(initialWeights()
+				.names_(tuple("output_feature", "input_feature")));
+		self.bias = Parameter(initialBias().names_(tuple("example", "output_feature")));		
+	}
+	
+	private Tensor initialBias() {
+		return torch.randn(torch.Size(1, self.out_features)).mul((float) Math.sqrt(1f / in_features));
+	}
+	
+	private Tensor initialWeights() {
+		return torch.randn(torch.Size(self.out_features, self.in_features)).mul((float) Math.sqrt(1f / in_features));
 	}
 
 	@Override
@@ -37,7 +48,6 @@ public abstract class Linear<M extends Linear<M>> extends Module<M> implements I
 		self.weight.grad_(null);
 	}
 	
-
 	public Parameter bias() {
 		return bias;
 	}

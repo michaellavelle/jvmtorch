@@ -14,6 +14,7 @@
 package org.jvmtorch.impl;
 
 import org.jvmpy.symbolictensors.SymbolicTensor;
+import org.jvmtorch.torch.Size;
 import org.jvmtorch.torch.Tensor;
 import org.jvmtorch.torch.TensorData;
 import org.jvmtorch.torch.TensorDataAdapter;
@@ -24,22 +25,22 @@ public class ScalarImpl extends TensorBase {
 	
 	public ScalarImpl(Torch torch, String name, String inputName,
 			TensorData tensorData) {
-		super(torch, new ScalarDataConverter(torch), name, inputName, tensorData);
+		super(torch, new ScalarDataConverter(torch), tensorData);
 	}
 
 	public ScalarImpl(Torch torch, TensorDataConverter<?> tensorDataConverter,
-			SymbolicTensor<TensorData> symbolicTensor) {
+			SymbolicTensor<TensorData, Size> symbolicTensor) {
 		super(torch, new ScalarDataConverter(torch), symbolicTensor);
 	}
 	
 	public ScalarImpl(Torch torch, String name, String inputName,
 			float value) {
-		super(torch, new ScalarDataConverter(torch), name, inputName, new TensorDataAdapter<>(new ScalarOperations(torch, value), new ScalarDataConverter(torch)));
+		super(torch, new ScalarDataConverter(torch), new TensorDataAdapter<>(new ScalarOperations(torch, value), new ScalarDataConverter(torch)));
 	}
 
 	@Override
-	protected Tensor createDefaultTensor(Torch torch, SymbolicTensor<TensorData> tensor) {
-		if (tensor.dimensions().length == 0) { 
+	protected Tensor createDefaultTensor(Torch torch, SymbolicTensor<TensorData, Size> tensor) {
+		if (tensor.size().dimensions().length == 0) { 
 			return new ScalarImpl(torch, new ScalarDataConverter(torch), tensor);
 		} else {
 			return torch.tensor(tensor.get());

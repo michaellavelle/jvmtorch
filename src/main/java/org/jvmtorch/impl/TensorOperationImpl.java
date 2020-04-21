@@ -13,61 +13,23 @@
  */
 package org.jvmtorch.impl;
 
-import static org.jvmpy.python.Python.tuple;
-
-import java.util.List;
 import java.util.function.UnaryOperator;
 
-import org.jvmpy.python.Tuple;
 import org.jvmpy.symbolictensors.OperationImpl;
-import org.jvmpy.symbolictensors.TensorDimensionsContainer;
-import org.jvmtorch.torch.Size;
 import org.jvmtorch.torch.TensorOperation;
 import org.jvmtorch.torch.Torch;
 
-public class TensorOperationImpl<T> extends OperationImpl<T> implements TensorOperation<T> {
+public class TensorOperationImpl<T, S> extends OperationImpl<T, S> implements TensorOperation<T, S> {
 
-	private UnaryOperator<Size> targetSizeMapping;
+	private UnaryOperator<S> targetSizeMapping;
 	
-	public TensorOperationImpl(Torch torch, String name, UnaryOperator<T> operation, UnaryOperator<Size> targetSizeMapping) {
-		super(name, operation, d -> dimensions(targetSizeMapping.apply(torch.Size(d.dimensions()).names_(names(d.dimensionNames())))));
+	public TensorOperationImpl(Torch torch, String name, UnaryOperator<T> operation, UnaryOperator<S> targetSizeMapping) {
+		super(name, operation, d -> targetSizeMapping.apply(d));
 		this.targetSizeMapping = targetSizeMapping;
-	}
-
-	
-	private static Tuple<String> names(List<String> names) {
-		if (names == null) {
-			return null;
-		} else {
-			return tuple(names);
-		}
 	}
 	
 	@Override
-	public UnaryOperator<Size> sizeMapping(Torch torch) {
+	public UnaryOperator<S> sizeMapping(Torch torch) {
 		return targetSizeMapping;
-	}
-
-
-	private static TensorDimensionsContainer dimensions(Size size) {
-		return new TensorDimensionsContainer() {
-
-			@Override
-			public int[] dimensions() {
-				return size.dimensions();
-			}
-
-			@Override
-			public List<String> dimensionNames() {
-
-				Tuple<String> names = size.dimensionNames();
-				if (names == null) {
-					return null;
-				} else {
-					return names.asList();
-				}
-			}
-			
-		};
 	}
 }

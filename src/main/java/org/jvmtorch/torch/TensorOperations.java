@@ -29,9 +29,7 @@ public interface TensorOperations<T> extends Supplier<T>, TensorDataContainer {
 
 	T mul(T other);
 	
-	
 	T div(T other);
-
 	
 	T sub(T other);
 
@@ -42,8 +40,15 @@ public interface TensorOperations<T> extends Supplier<T>, TensorDataContainer {
 	T add(T other);
 
 	T mean();
+	
+	T norm();
 
 	T mul_(T other);
+	
+	T columnSums();
+	
+	T rowSums();
+
 
 	T sub_(T other);
 
@@ -61,6 +66,8 @@ public interface TensorOperations<T> extends Supplier<T>, TensorDataContainer {
 	T view(int i, int j);
 	
 	T view(Size size);
+	
+	void close();
 
 
 }

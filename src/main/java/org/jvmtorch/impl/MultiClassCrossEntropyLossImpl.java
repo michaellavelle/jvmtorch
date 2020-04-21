@@ -15,18 +15,28 @@ package org.jvmtorch.impl;
 
 import org.jvmpy.python.OrderedDict;
 import org.jvmtorch.nn.Parameter;
-import org.jvmtorch.torch.Torch;
-import org.jvmtorch.torch.optim.Optim;
+import org.jvmtorch.nn.modules.MultiClassCrossEntropyLoss;
+import org.jvmtorch.torch.Tensor;
 
-public class OptimImpl implements Optim {
-	
-	protected Torch torch;
-	
-	public OptimImpl(Torch torch) {
-		this.torch = torch;
+
+public abstract class MultiClassCrossEntropyLossImpl implements MultiClassCrossEntropyLoss {
+
+	protected OrderedDict<Parameter> parameters;
+
+	@Override
+	public OrderedDict<Parameter> parameters() {
+		return parameters;
 	}
-		
-	public SGD SGD(OrderedDict<Parameter> parameters, Number learningRate)  {
-		return new SGD(torch, parameters, learningRate);
+
+	@Override
+	public void zero_grad() {
+		if (parameters != null) {
+			parameters.forEach(p -> p.getRight().zero_grad());
+		}
+	}
+
+	@Override
+	public Tensor apply(Tensor t, Tensor u) {
+		return forward(this, t, u);
 	}
 }

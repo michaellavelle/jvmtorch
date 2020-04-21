@@ -13,10 +13,7 @@
  */
 package org.jvmpy.symbolictensors;
 
-import java.util.List;
+public interface TensorDimensionsContainer<S> {
 
-public interface TensorDimensionsContainer {
-
-	int[] dimensions();
-	List<String> dimensionNames();
+	S size();
 }

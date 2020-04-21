@@ -13,33 +13,13 @@
  */
 package org.jvmtorch.torch;
 
-import static org.jvmpy.python.Python.tuple;
-
-import java.util.List;
 import java.util.function.UnaryOperator;
 
 import org.jvmpy.symbolictensors.Operation;
-import org.jvmpy.symbolictensors.TensorDimensionsContainer;
 
-public interface TensorOperation<T> extends Operation<T> {
+public interface TensorOperation<T, S> extends Operation<T, S> {
 
-	default UnaryOperator<Size> sizeMapping(Torch torch) {
-		return s-> mapSize(torch, s);
-	}
-	
-	private Size mapSize(Torch torch, Size s) {
-		TensorDimensionsContainer b =  dimensionsMapping().apply(new TensorDimensionsContainer() {
-
-			@Override
-			public int[] dimensions() {
-				return s.dimensions();
-			}
-
-			@Override
-			public List<String> dimensionNames() {
-				return s.dimensionNames().asList();
-			}});
-		
-		return torch.Size(b.dimensions()).names_(tuple(b.dimensionNames()));
+	default UnaryOperator<S> sizeMapping(Torch torch) {
+		return s-> dimensionsMapping().apply(s);
 	}
 }

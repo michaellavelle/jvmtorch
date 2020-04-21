@@ -22,13 +22,10 @@ import org.jvmtorch.torch.Size;
 import org.jvmtorch.torch.TensorOperations;
 import org.jvmtorch.torch.Torch;
 
-public class TensorMatrixMultiplication<T extends TensorOperations<T>> implements DifferentiableTensorTensorFunction<T> {
+public class TensorMatrixMultiplication<T extends TensorOperations<T>> extends DifferentiableTensorTensorFunctionBase<T> {
 
-	@SuppressWarnings("unused")
-	private Torch torch;
-	
 	public TensorMatrixMultiplication(Torch torch) {
-		this.torch = torch;
+		super(torch);
 	}
 	
 	/**
@@ -62,11 +59,21 @@ public class TensorMatrixMultiplication<T extends TensorOperations<T>> implement
 	
 	private <S extends TensorOperations<S>>  S back(S g, Pair<S, S> variables) {
 		
-		
+		// Back:torch.Size([1000, 10], names=(example, output_feature))
 
+		// V1:torch.Size([1000, 100], names=(example, feature))
+		// V2:torch.Size([100, 10], names=(input_feature, output_feature))
+
+		//TH:10:1000
+		//OTH:10:100
+		
+		// When evaluated:
+		
+		// g = 10:1000,,   should be 1000:10
+		// variables.getRight().t() = 10:100  
+		
 		
 		S s =  g.matmul(variables.getRight().t());
-		//new RuntimeException("hi").printStackTrace();
 		return s;
 	}
 
@@ -82,10 +89,12 @@ public class TensorMatrixMultiplication<T extends TensorOperations<T>> implement
 
 	protected <S extends TensorOperations<S>> S convertToAlternativeSize(S tensor) {
 		
+		
 		List<Size> alternatives = tensor.size().getAlternates();
 		if (!alternatives.isEmpty()) {
 			tensor = tensor.view(alternatives.get(alternatives.size() - 1));
 		}
+
 
 		return tensor;
 	}

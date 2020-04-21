@@ -7,6 +7,7 @@ import org.jvmpy.symbolictensors.Operatable;
 import org.jvmpy.symbolictensors.Operation;
 import org.jvmtorch.torch.Size;
 import org.jvmtorch.torch.Torch;
+import org.ml4j.EditableMatrix;
 import org.ml4j.Matrix;
 import org.ml4j.MatrixFactory;
 import org.ml4j.nn.components.DirectedComponentsContext;
@@ -19,7 +20,7 @@ import org.ml4j.nn.neurons.format.ImageNeuronsActivationFormat;
 import org.ml4j.nn.neurons.format.NeuronsActivationFormat;
 
 
-public class ML4JTensorOperationsImpl implements ML4JTensorOperations, Operatable<ML4JTensorOperations, ML4JTensorOperations> {
+public class ML4JTensorOperationsImpl implements ML4JTensorOperations, Operatable<ML4JTensorOperations, Size, ML4JTensorOperations> {
 
 	private MatrixFactory matrixFactory;
 	private DirectedComponentsContext directedComponentsContext;
@@ -47,6 +48,8 @@ public class ML4JTensorOperationsImpl implements ML4JTensorOperations, Operatabl
 		if (matrix.getRows() == 0 || matrix.getColumns() ==0) {
 			throw new IllegalArgumentException();
 		}
+		this.size = NeuronsActivationSize.getSize(torch, neuronsActivation);
+
 	}
 	
 	public Matrix getMatrix() {
@@ -75,9 +78,17 @@ public class ML4JTensorOperationsImpl implements ML4JTensorOperations, Operatabl
 	
 	@Override
 	public ML4JTensorOperations mul(float value) {
-		return toML4JTensorOperations(matrix.asEditableMatrix().mul(value), size);
+		return toML4JTensorOperations(matrix.mul(value), size);
 	}
-
+	
+	public ML4JTensorOperations norm() {
+		
+		EditableMatrix norm = matrix.dup().asEditableMatrix();
+		for (int i = 0; i < norm.getLength(); i++) {
+			norm.put(i, (float)Math.sqrt(norm.get(i) * norm.get(i)));
+		}
+		return toML4JTensorOperations(norm, size);
+	}
 	@Override
 	public ML4JTensorOperations add(float value) {
 		return toML4JTensorOperations(matrix.add(value), size);
@@ -109,7 +120,6 @@ public class ML4JTensorOperationsImpl implements ML4JTensorOperations, Operatabl
 	@Override
 	public ML4JTensorOperations matmul(ML4JTensorOperations other) {
 	
-
 		return toML4JTensorOperations(matrix.mmul(other.getMatrix()), size().matmul(other.size()));
 	}
 
@@ -125,9 +135,7 @@ public class ML4JTensorOperationsImpl implements ML4JTensorOperations, Operatabl
 
 	@Override
 	public ML4JTensorOperations add(ML4JTensorOperations other) {
-			
-	
-		
+				
 		if (requiresSecondMatrixColumnBroadcast(matrix, other.getMatrix())) {
 			return toML4JTensorOperations(matrix.addColumnVector(other.getMatrix()), size);
 
@@ -224,44 +232,12 @@ public class ML4JTensorOperationsImpl implements ML4JTensorOperations, Operatabl
 		view.asEditableMatrix().reshape(i, j);
 		
 	    return toML4JTensorOperations(view, torch.Size(finalI, finalJ));
-
-		//return this.performUnaryMappingOperation("view", new MyOperationImpl<>("view", l -> new ML4JTensorOperationsImpl(directedComponentsContext, view, null), s -> new Size (finalI, finalJ)), new MyOperationImpl<>("viewBackward", l -> l.view(size().get(0), size().get(1)), s -> s));
-
 		
 	}
 	
-	//@Override
-		public ML4JTensorOperations view(Size size) {
-			/*
-			if (i == -1 && j == -1) {
-				throw new RuntimeException("only one dimension can be inferred");
-			} else {
-				if (i == -1) {
-					i = this.numel() / j;
-				}
-				if (j == -1) {
-					j = this.numel() / i;
-				}
-			}
-			*/
-			//Size s2 = size.asMatrixSize();
-
-			//final int finalI = s2.get(0);
-			//final int finalJ = s2.get(1);
-
-
-			//Matrix view = matrix.softDup();
-			
-			//view.asEditableMatrix().reshape(finalI, finalJ);
-			
-		    return toML4JTensorOperations(matrix, size);
-
-			//return this.performUnaryMappingOperation("view", new MyOperationImpl<>("view", l -> new ML4JTensorOperationsImpl(directedComponentsContext, view, null), s -> new Size (finalI, finalJ)), new MyOperationImpl<>("viewBackward", l -> l.view(size().get(0), size().get(1)), s -> s));
-
-			
-		}
-	
-
+	public ML4JTensorOperations view(Size size) {
+	    return toML4JTensorOperations(matrix, size);		
+	}
 	
 	private boolean requiresSecondMatrixColumnBroadcast(Matrix first, Matrix second) {
 		if (first.getRows() == second.getRows() 
@@ -344,18 +320,19 @@ public class ML4JTensorOperationsImpl implements ML4JTensorOperations, Operatabl
 	}
 
 	@Override
-	public void performInlineOperation(Operation<ML4JTensorOperations> operation) {
+	public void performInlineOperation(Operation<ML4JTensorOperations, Size> operation) {
 		operation.apply(this);
 	}
 
 	@Override
-	public ML4JTensorOperations performUnaryMappingOperation(String newTensorName, Operation<ML4JTensorOperations> operation) {
-		return 	operation.apply(this);
+	public ML4JTensorOperations performUnaryMappingOperation(Operation<ML4JTensorOperations, Size> operation) {
+		return operation.apply(this);
 	}
 
 	@Override
 	public float[] getDataAsFloatArray() {
-		return matrix.getRowByRowArray();
+		float[] data = matrix.getRowByRowArray();
+		return data;
 	}
 
 	@Override
@@ -366,6 +343,27 @@ public class ML4JTensorOperationsImpl implements ML4JTensorOperations, Operatabl
 			this.size = size;
 		}
 		return this;
+	}
+
+	@Override
+	public ML4JTensorOperations columnSums() {
+		if (size.dimensions().length != 2) {
+			throw new IllegalStateException("Tensor must be 2 dimensional");
+		}
+		return toML4JTensorOperations(matrix.columnSums(), torch.Size(1, size().get(1)));
+	}
+	
+	@Override
+	public ML4JTensorOperations rowSums() {
+		if (size.dimensions().length != 2) {
+			throw new IllegalStateException("Tensor must be 2 dimensional");
+		}
+		return toML4JTensorOperations(matrix.rowSums(), torch.Size(size().get(0), 1));
+	}
+
+	@Override
+	public void close() {
+		//matrix.close();
 	}
 
 }

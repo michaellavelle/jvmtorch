@@ -21,14 +21,11 @@ import org.jvmtorch.torch.Size;
 import org.jvmtorch.torch.TensorOperations;
 import org.jvmtorch.torch.Torch;
 
-public class TensorSubtraction<T extends TensorOperations<T>> implements DifferentiableTensorTensorFunction<T> {
-
-	private Torch torch;
+public class TensorSubtraction<T extends TensorOperations<T>> extends DifferentiableTensorTensorFunctionBase<T> {
 	
 	public TensorSubtraction(Torch torch) {
-		this.torch = torch;
+		super(torch);
 	}
-	
 	
 	/**
 	 * Returns a UnaryOperator representing the function that subtracts from the input tensor

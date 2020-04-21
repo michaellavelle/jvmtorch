@@ -39,7 +39,6 @@ public class ML4JJvmTorchFactory implements JvmTorchFactory {
 
 			@Override
 			public ML4JTensorOperations apply(float[] t, Size size) {
-				System.out.println(size);
 				Size matrixSize = size.asMatrixSize();
 				return new ML4JTensorOperationsImpl(createTorch(), directedComponentsContext, 
 						directedComponentsContext.getMatrixFactory().createMatrixFromRowsByRowsArray(matrixSize.get(0), matrixSize.get(1), t), size);
@@ -67,7 +66,7 @@ public class ML4JJvmTorchFactory implements JvmTorchFactory {
 
 	@Override
 	public Optim createOptim() {
-		return new OptimImpl();
+		return new OptimImpl(createTorch());
 	}
 
 }

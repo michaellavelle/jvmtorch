@@ -20,11 +20,12 @@ import java.util.List;
 import org.jvmpy.python.Tuple;
 import org.jvmtorch.nn.Parameter;
 import org.jvmtorch.torch.GradFunction;
+import org.jvmtorch.torch.Size;
 import org.jvmtorch.torch.Tensor;
 import org.jvmtorch.torch.TensorOperation;
 
 public class ParameterImpl extends TensorAdapter implements Parameter {
-
+	
 	public ParameterImpl(Tensor adapted) {
 		super(adapted.requires_grad_(True));
 	}
@@ -36,10 +37,10 @@ public class ParameterImpl extends TensorAdapter implements Parameter {
 
 	@Override
 	public String toString() {
-		//return "Parameter containing:\n" + this.adapted.toString();
-		return "Parameter";
+		return "Parameter containing:\n" + this.adapted.toString();
+		//return "Parameter";
 	}
-
+	
 	@Override
 	public Parameter sub_(Tensor other) {
 		super.sub_(other);
@@ -53,7 +54,7 @@ public class ParameterImpl extends TensorAdapter implements Parameter {
 	}
 
 	@Override
-	public Parameter withNextFunctions(String name, List<TensorOperation<Tensor>> tensorOperations, Tuple<Tuple<GradFunction>> nextFunctions) {
+	public Parameter withNextFunctions(String name, List<TensorOperation<Tensor, Size>> tensorOperations, Tuple<Tuple<GradFunction>> nextFunctions) {
 		super.withNextFunctions(name, tensorOperations, nextFunctions);
 		return this;
 	}

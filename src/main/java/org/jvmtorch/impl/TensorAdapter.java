@@ -157,16 +157,16 @@ public class TensorAdapter implements Tensor {
 	}
 
 	@Override
-	public Tensor withNextFunctions(String name, List<TensorOperation<Tensor>> operations,
+	public Tensor withNextFunctions(String name, List<TensorOperation<Tensor, Size>> operations,
 			Tuple<Tuple<GradFunction>> nextFunctions) {
 		adapted.withNextFunctions(name, operations, nextFunctions);
 		return this;
 	}
 
 	@Override
-	public Tensor performUnaryMappingOperation(String newTensorName,
-			TensorOperation<TensorData> operation, TensorOperation<Tensor> backwardOp) {
-		return adapted.performUnaryMappingOperation(newTensorName, operation, backwardOp);
+	public Tensor performUnaryMappingOperation(
+			TensorOperation<TensorData, Size> operation, TensorOperation<Tensor, Size> backwardOp) {
+		return adapted.performUnaryMappingOperation( operation, backwardOp);
 	}
 
 	@Override
@@ -219,5 +219,30 @@ public class TensorAdapter implements Tensor {
 	@Override
 	public Tensor sum() {
 		return adapted.sum();
+	}
+
+	@Override
+	public Tensor columnSums() {
+		return adapted.columnSums();
+	}
+	
+	@Override
+	public Tensor rowSums() {
+		return adapted.rowSums();
+	}
+
+	@Override
+	public void close() {
+		this.adapted = null;
+	}
+
+	@Override
+	public float item() {
+		return adapted.item();
+	}
+
+	@Override
+	public Tensor norm() {
+		return adapted.norm();
 	}
 }

@@ -16,8 +16,10 @@ package org.jvmpy.symbolictensors;
 import java.util.List;
 import java.util.function.Supplier;
 
+import org.jvmtorch.torch.Size;
+
 /**
- * A SymbolicTensor allows an underlying TensorDataContainer of type T to be
+ * A SymbolicTensor allows an underlying TensorDataContainer of type T and size of type S to be
  * manipulated in mathematical expressions, and for gradients
  * to be calculated.
  * 
@@ -29,7 +31,7 @@ import java.util.function.Supplier;
  * 
  * @param <T> The type of tensor to wrap inside the SymbolicTensor
  */
-public interface SymbolicTensor<T extends TensorDataContainer> extends Supplier<T>, Operatable<T, SymbolicTensor<T>>, TensorDimensionsContainer {
+public interface SymbolicTensor<T extends TensorDataContainer, S> extends Supplier<T>, Operatable<T, S, SymbolicTensor<T, S>> {
 
 	/**
 	 * @return The current evaluation of this tensor.
@@ -42,7 +44,7 @@ public interface SymbolicTensor<T extends TensorDataContainer> extends Supplier<
 	 * 
 	 * @param operation The operation to perform.
 	 */
-	void performInlineOperation(Operation<T> operation);
+	void performInlineOperation(Operation<T, S> operation);
 	
 	/**
 	 * Perform an operation 
@@ -51,26 +53,22 @@ public interface SymbolicTensor<T extends TensorDataContainer> extends Supplier<
 	 * @param operation
 	 * @return
 	 */
-	SymbolicTensor<T> performUnaryMappingOperation(String newTensorName, Operation<T> operation);
-
-	String getName();
-	
-	int[] dimensions();
-	
-	List<String> dimensionNames();
-	
-	String getInputName();
-	
+	SymbolicTensor<T, S> performUnaryMappingOperation(Operation<T, S> operation);
+			
 	List<String> getOperationNames();
 
 	List<String> getAllOperationNames();
+		
+	List<Operation<T, S>> getOperations();
 
-	List<Operation<T>> getOperations();
-
-	SymbolicTensor<T> detach(String tensorName);
+	SymbolicTensor<T, S> detach(String tensorName);
 	
 	Supplier<T> getInput();
-
+	
+	SymbolicTensor<T, S> size_(Size size);
+	
+	S size();
+	
 	@Override
 	default T get() {
 		return evaluate();

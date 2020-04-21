@@ -15,6 +15,7 @@ package org.jvmtorch.nn;
 
 import org.jvmtorch.nn.functional.Functional;
 import org.jvmtorch.nn.modules.MSELoss;
+import org.jvmtorch.nn.modules.MultiClassCrossEntropyLoss;
 import org.jvmtorch.torch.Size;
 import org.jvmtorch.torch.Tensor;
 import org.jvmtorch.torch.Torch;
@@ -26,6 +27,8 @@ public interface NN  {
 	public Linear<?> Linear(int... params);
 
 	public MSELoss MSELoss();
+	
+	public MultiClassCrossEntropyLoss MultiClassCrossEntropyLoss();
 
 	Torch torch();
 	

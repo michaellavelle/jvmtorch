@@ -29,7 +29,7 @@ public interface GradFunction {
 	 * @return A list of TensorOperation within this grad
 	 * function.
 	 */
-	List<TensorOperation<Tensor>> operations();
+	List<TensorOperation<Tensor, Size>> operations();
 	
 	/**
 	 * @return The name of this grad function.

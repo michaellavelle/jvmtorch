@@ -17,17 +17,18 @@ import java.util.List;
 
 import org.jvmpy.python.Tuple;
 import org.jvmtorch.torch.GradFunction;
+import org.jvmtorch.torch.Size;
 import org.jvmtorch.torch.Tensor;
 import org.jvmtorch.torch.TensorOperation;
 
 public class GradFunctionImpl implements GradFunction {
 
 	private String name;
-	private List<TensorOperation<Tensor>> operations;
+	private List<TensorOperation<Tensor, Size>> operations;
 	private Tuple<Tuple<GradFunction>> next_functions;
 	private Tensor variable;
 	
-	public GradFunctionImpl(String name, List<TensorOperation<Tensor>> operations, Tensor variable, Tuple<Tuple<GradFunction>> next_functions) {
+	public GradFunctionImpl(String name, List<TensorOperation<Tensor, Size>> operations, Tensor variable, Tuple<Tuple<GradFunction>> next_functions) {
 		this.name = name;
 		this.operations = operations;
 		this.next_functions = next_functions;
@@ -44,7 +45,7 @@ public class GradFunctionImpl implements GradFunction {
 	}
 
 	@Override
-	public List<TensorOperation<Tensor>> operations() {
+	public List<TensorOperation<Tensor, Size>> operations() {
 		return operations;
 	}
 

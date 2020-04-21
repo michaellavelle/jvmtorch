@@ -25,6 +25,7 @@ public abstract class FunctionalImpl implements Functional {
 		var output = input.matmul(weight.t());
 				
 		if (bias != null) {
+			
 			output = output.add(bias);
 		}
 			

@@ -17,6 +17,12 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
+import com.codepoetics.protonpack.StreamUtils;
 
 /**
  * Provides methods that can be statically imported
@@ -32,14 +38,45 @@ public class Python {
 		System.out.println(o == null ? "None" : o.toString());
 	}
 	
+	public static <T> void print(Object...objects) {
+		StringBuilder sb = new StringBuilder();
+		if (objects == null) {
+			print(objects, sb);
+		} else {
+			Arrays.stream(objects).forEach(o -> print(o, sb));
+		}
+		System.out.println(sb.toString().trim());
+	}
+	
+	private static <T> void print(T o, StringBuilder sb) {
+		sb.append(o == null ? " None" : " " + o.toString());
+	}
+	
+	/*
 	public static <T> void print(T[] o) {
 		System.out.println(o == null ? "None" : Arrays.asList(o).toString());
 	}
+	*/
 
 	public static Tuple<Integer> inttuple(int first, int...remaining) {
 		return new IntTuple(first, remaining);
 	}
 
+	public static <T> Iterable<Tuple<?>> enumerate(List<T> components) {
+		return StreamUtils.zipWithIndex(components.stream()).map((e) -> new ObjectTuple((int)e.getIndex(), e.getValue())).collect(Collectors.toList());
+	}
+	
+	public static <T> Iterable<Tuple<?>> enumerate(List<T> components, int index) {
+		return StreamUtils.zipWithIndex(components.subList(index, components.size()).stream()).map(e -> new ObjectTuple((int)e.getIndex(), e.getValue())).collect(Collectors.toList());
+	}
+	
+	public static <T> Iterable<Indexed<T>> enumerate(Supplier<Stream<T>> componentStreamSupplier, int index) {
+		return () -> StreamUtils.zipWithIndex(componentStreamSupplier.get()).filter(e -> e.getIndex() >= index).map(e -> IndexedImpl.create(e.getValue(), (int)e.getIndex())).iterator();
+	}
+	
+	public static int[] range(int r) {
+		return IntStream.range(0, r).toArray();
+	}
 
 	@SafeVarargs
 	public static <T> Tuple<T> tuple(T first, T...components) {

@@ -15,13 +15,13 @@ package org.jvmpy.symbolictensors;
 
 import java.util.function.UnaryOperator;
 
-public class OperationImpl<T> implements Operation<T> {
+public class OperationImpl<T, S> implements Operation<T, S> {
 
     private UnaryOperator<T> operation;
-    private UnaryOperator<TensorDimensionsContainer> dimensionsMapping;
+    private UnaryOperator<S> dimensionsMapping;
     private String name;
 
-    public OperationImpl(String name, UnaryOperator<T> operation, UnaryOperator<TensorDimensionsContainer> dimensionsMapping) {
+    public OperationImpl(String name, UnaryOperator<T> operation, UnaryOperator<S> dimensionsMapping) {
         this.operation = operation;
         this.name = name;
         this.dimensionsMapping = dimensionsMapping;
@@ -40,7 +40,7 @@ public class OperationImpl<T> implements Operation<T> {
 
 
 	@Override
-	public UnaryOperator<TensorDimensionsContainer> dimensionsMapping() {
+	public UnaryOperator<S> dimensionsMapping() {
 		return dimensionsMapping;
 	}
 

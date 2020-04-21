@@ -58,23 +58,20 @@ public class ML4JConv2d extends Conv2d<ML4JConv2d> {
     @Override
     public Tensor forward(Tensor input) {
     	
-		
 		ML4JTensor ml4jTensor = tensorConverter.createTensor(input);
 		
 		NeuronsActivation inputNeuronsActivation = ml4jTensor.toNeuronsActivation(DimensionScope.INPUT, NeuronsActivationFeatureOrientation.ROWS_SPAN_FEATURE_SET);
-		
-		
-		Size si = NeuronsActivationSize.getSize(torch, inputNeuronsActivation);
+	
+		Size size = NeuronsActivationSize.getSize(torch, inputNeuronsActivation);
 		
 		NeuronsActivationFeatureOrientation originalFormat = inputNeuronsActivation.getFormat().getFeatureOrientation();
 		boolean transposed = false;
-		if (si.asList().equals(input.size().asList())) {
+		if (size.asList().equals(input.size().asList())) {
 			transposed = true;
 			if (originalFormat == NeuronsActivationFeatureOrientation.ROWS_SPAN_FEATURE_SET) {
 				originalFormat = NeuronsActivationFeatureOrientation.COLUMNS_SPAN_FEATURE_SET;
 			} else {
 				originalFormat = NeuronsActivationFeatureOrientation.ROWS_SPAN_FEATURE_SET;
-
 			}
 		}
 		
@@ -85,9 +82,8 @@ public class ML4JConv2d extends Conv2d<ML4JConv2d> {
     	boolean isCorrectFormat = ImageNeuronsActivationFormat.ML4J_DEFAULT_IMAGE_FORMAT.isEquivalentFormat(format, DimensionScope.INPUT);
 
     	if (!isCorrectFormat) {
-    		throw new IllegalArgumentException();
+    		throw new IllegalArgumentException("Expected format to be ML4J_DEFAULT_IMAGE_FORMAT but was:" + format);
     	}
-    
     
         int inputWidth = (int)Math.sqrt(inputNeuronsActivation.getFeatureCount() / self.in_channels);
 
@@ -117,13 +113,13 @@ public class ML4JConv2d extends Conv2d<ML4JConv2d> {
         NeuronsActivation outActivation = activation.getOutput();
 
 		ML4JTensor convOutput =  new ML4JTensor(torch, ml4jTensor.getDirectedComponentsContext(), tensorDataConverter,
-        		"out4", "out5", outActivation, input.requires_grad());
+        		outActivation, input.requires_grad());
 		
 		boolean transp = transposed;
 		
 		NeuronsActivationFeatureOrientation origFormat = originalFormat;
         		
-        Tensor output = input.performUnaryMappingOperation("ConvOutput", new TensorOperationImpl<>(torch, "ConvOutput", l -> convOutput.toTensorData(), s -> convOutput.size()), new TensorOperationImpl<>(torch, "ConvBackward", l-> backward(activation, axonsConfig.getRightNeurons(), l, config.getAxonsConfig().getLeftNeurons().hasBiasUnit(), input.requires_grad(), transp, origFormat), s -> input.size()));
+        Tensor output = input.performUnaryMappingOperation(new TensorOperationImpl<>(torch, "ConvOutput", l -> convOutput.toTensorData(), s -> convOutput.size()), new TensorOperationImpl<>(torch, "ConvBackward", l-> backward(activation, axonsConfig.getRightNeurons(), l, config.getAxonsConfig().getLeftNeurons().hasBiasUnit(), input.requires_grad(), transp, origFormat), s -> input.size()));
         
         return output;
     }
@@ -187,19 +183,19 @@ public class ML4JConv2d extends Conv2d<ML4JConv2d> {
         Matrix weightsGradient = axonsGradient.getWeightsGradient();
         Matrix biasGradient = axonsGradient.getLeftToRightBiasGradient();
 
-        Tensor weightsGradientTensor = new ML4JTensor(torch, directedComponentsContext, tensorDataConverter, "weightsGrad", "weightsGrad", createTensorData(weightsGradient, self.weight.size()), false );
+        Tensor weightsGradientTensor = new ML4JTensor(torch, directedComponentsContext, tensorDataConverter, createTensorData(weightsGradient, self.weight.size()), false );
         self.weight.grad_(weightsGradientTensor);
 
         if (hasBias) {
-            Tensor biasGradientTensor = new ML4JTensor(torch, directedComponentsContext, tensorDataConverter, "biasGrad", "biasGrad", createTensorData(biasGradient, self.bias.size()), false);
+            Tensor biasGradientTensor = new ML4JTensor(torch, directedComponentsContext, tensorDataConverter, createTensorData(biasGradient, self.bias.size()), false);
             self().bias.grad_(biasGradientTensor);
         }
 
-        ML4JTensor output =  new ML4JTensor(torch, ml4jTensor.getDirectedComponentsContext(), tensorDataConverter, "out10", "out11", outActivation, true);
+        ML4JTensor output =  new ML4JTensor(torch, ml4jTensor.getDirectedComponentsContext(), tensorDataConverter,  outActivation, true);
         
         if (backTransposed && !transp) {
     		NeuronsActivation outAct = output.toNeuronsActivation(DimensionScope.OUTPUT, originalBackFormat);
-    		output =  new ML4JTensor(torch, ml4jTensor.getDirectedComponentsContext(), tensorDataConverter, "out12", "out13", outAct, true);
+    		output =  new ML4JTensor(torch, ml4jTensor.getDirectedComponentsContext(), tensorDataConverter, outAct, true);
         }
         
 

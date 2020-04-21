@@ -15,11 +15,10 @@ package org.jvmpy.symbolictensors;
 
 import java.util.function.UnaryOperator;
 
-public interface Operation<T> extends UnaryOperator<T> {
+public interface Operation<T, S> extends UnaryOperator<T> {
 
     String name();
     
-	UnaryOperator<TensorDimensionsContainer> dimensionsMapping();
-
-
+	UnaryOperator<S> dimensionsMapping();
+	
 }

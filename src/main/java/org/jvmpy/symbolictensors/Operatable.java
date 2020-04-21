@@ -13,7 +13,7 @@
  */
 package org.jvmpy.symbolictensors;
 
-public interface Operatable<T, O> {
+public interface Operatable<T, S, O> {
 
     /**
      * Perform an inline operation on the underlying tensor,
@@ -21,7 +21,7 @@ public interface Operatable<T, O> {
      *
      * @param operation The operation to perform.
      */
-    void performInlineOperation(Operation<T> operation);
+    void performInlineOperation(Operation<T, S> operation);
 
     /**
      * Perform an operation
@@ -30,5 +30,5 @@ public interface Operatable<T, O> {
      * @param operation
      * @return
      */
-    O performUnaryMappingOperation(String newTensorName, Operation<T> operation);
+    O performUnaryMappingOperation(Operation<T, S> operation);
 }

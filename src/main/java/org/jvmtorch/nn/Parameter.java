@@ -17,6 +17,7 @@ import java.util.List;
 
 import org.jvmpy.python.Tuple;
 import org.jvmtorch.torch.GradFunction;
+import org.jvmtorch.torch.Size;
 import org.jvmtorch.torch.Tensor;
 import org.jvmtorch.torch.TensorData;
 import org.jvmtorch.torch.TensorOperation;
@@ -34,14 +35,13 @@ public interface Parameter extends Tensor {
 
 	@Override
 	Parameter requires_grad_(boolean requires_grad);
-
 	
 	@Override
-	Parameter withNextFunctions(String name, List<TensorOperation<Tensor>> operations,
+	Parameter withNextFunctions(String name, List<TensorOperation<Tensor, Size>> operations,
 			Tuple<Tuple<GradFunction>> nextFunctions);
 	
 	@Override
-	Tensor performUnaryMappingOperation(String newTensorName, TensorOperation<TensorData> operation, TensorOperation<Tensor> backwardOp);
+	Tensor performUnaryMappingOperation(TensorOperation<TensorData, Size> operation, TensorOperation<Tensor, Size> backwardOp);
 
 	@Override
 	Parameter mul_(Tensor other);
@@ -54,5 +54,6 @@ public interface Parameter extends Tensor {
 
 	@Override
 	Tensor t();
+
 	
 }

@@ -15,14 +15,19 @@ package org.jvmtorch.impl;
 
 import org.jvmpy.python.OrderedDict;
 import org.jvmtorch.nn.Parameter;
+import org.jvmtorch.torch.Torch;
 import org.jvmtorch.torch.optim.Optimiser;
 
 public class SGD extends OptimiserImpl<SGD> implements Optimiser {
 
 	protected Float learning_rate;
+	protected OrderedDict<Parameter> parameters;
+	protected Torch torch;
 
-	public SGD(OrderedDict<Parameter> parameters, Number learning_rate) {
+	public SGD(Torch torch, OrderedDict<Parameter> parameters, Number learning_rate) {
 		this.learning_rate = learning_rate == null ? null : learning_rate.floatValue();
+		this.parameters = parameters;
+		this.torch = torch;
 	}
 
 	@Override
@@ -32,11 +37,25 @@ public class SGD extends OptimiserImpl<SGD> implements Optimiser {
 
 	@Override
 	public void step() {
-
+		for (int i = 0; i < parameters.size(); i++) {
+			Parameter param = parameters.get(i).getRight();
+			param.requires_grad_(false);
+			if (param.grad() != null) {
+				var delta = param.grad().mul(learning_rate.floatValue() / (1000f));
+				param.sub_(delta);
+			}
+		}
 	}
 
 	@Override
 	public void zero_grad() {
+		for (int i = 0; i < parameters.size(); i++) {
+			Parameter param = parameters.get(i).getRight();
+			if (param.grad() != null) {
+				param.data().grad_(null);
+			}
+			param.requires_grad_(true);
+		}
 
 	}
 
