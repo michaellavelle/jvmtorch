@@ -360,6 +360,7 @@ public class TensorBase extends PythonClass<Tensor> implements Tensor {
 		UnaryOperator<Size> sizeFunction = tensorOperation.sizeFunction(new ImmutablePair<>(size(), other.size()));
 
 		if (other.requires_grad()) {
+			this.requires_grad_(true);
 			return toTensor(
 					performUnaryMappingOperation(new TensorOperationImpl<>(torch, tensorOperation.name(),
 							forwardPropFunction, sizeFunction)),
