@@ -95,6 +95,13 @@ public class Python {
 		return list.toArray((T[])Array.newInstance(orderedDict.getElementClass(), list.size()));
 	}
 	
+	@SuppressWarnings("unchecked")
+	public static <T> T[] list(List<T> orderedDict, Class<T> elementClass) {
+		List<T> list = new ArrayList<>();
+		orderedDict.forEach(i -> list.add(i));
+		return list.toArray((T[])Array.newInstance(elementClass, list.size()));
+	}
+	
 	public static <T> int len(T[] a) {
 		return a.length;
 	}

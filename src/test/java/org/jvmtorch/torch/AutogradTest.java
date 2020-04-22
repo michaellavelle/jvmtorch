@@ -3,6 +3,10 @@ package org.jvmtorch.torch;
 import static org.jvmpy.python.Python.len;
 import static org.jvmtorch.JvmTorch.torch;
 
+import java.util.function.Function;
+
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Assert;
 import org.junit.Test;
 import org.jvmtorch.testing.TestCase;
@@ -47,6 +51,32 @@ public class AutogradTest extends TestCase<AutogradTest> {
 		self.assertIs(next_functions.get(0,  0), a.grad_fn());
 		//Assert.assertNull(next_functions.get(1, 0)); // TODO - uncomment
 
+	}
+	
+	@Test
+	public void test_accumulate_grad() {
+        var grad_output = torch.ones(5, 5);
+        
+        Function<Boolean, Pair<Tensor, Tensor>> compute_grad = (create_graph) -> {
+        	 var x = torch.randn(5, 5).requires_grad_(true);
+             var y = x.add(2);
+             y.backward(grad_output);
+             var x_grad = x.grad();
+             var x_grad_clone = x.grad().cloneTensor();
+             y.backward(grad_output, create_graph);
+             return new ImmutablePair<>(x_grad, x_grad_clone);
+        };
+
+        // Accumulate in-place when create_graph is False
+        Pair<Tensor, Tensor> x_grad_x_grad_clone = compute_grad.apply(false);
+        var x_grad = x_grad_x_grad_clone.getLeft();
+        var x_grad_clone = x_grad_x_grad_clone.getRight();
+        self.assertArrayEqual(x_grad.getDataAsFloatArray(), x_grad_clone.mul(2).getDataAsFloatArray(), 0.0001f);
+
+        // Accumulate out-of-place when create_graph is False
+        x_grad_x_grad_clone = compute_grad.apply(true);;
+        self.assertArrayEqual(x_grad.getDataAsFloatArray(), x_grad_clone.mul(2).getDataAsFloatArray(), 0.0001f);
+        
 	}
 
 	

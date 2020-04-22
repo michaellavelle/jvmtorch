@@ -13,9 +13,11 @@
  */
 package org.jvmtorch.impl;
 
+import org.jvmtorch.nn.IModule;
 import org.jvmtorch.nn.NN;
 import org.jvmtorch.nn.Parameter;
 import org.jvmtorch.nn.functional.Functional;
+import org.jvmtorch.nn.modules.container.Sequential;
 import org.jvmtorch.torch.Size;
 import org.jvmtorch.torch.Tensor;
 import org.jvmtorch.torch.Torch;
@@ -47,4 +49,11 @@ public abstract class NNImpl implements NN {
 	public Parameter Parameter(Size size) {
 		return new ParameterImpl(torch.randn(size).mul(0.01f));
 	}
+
+	@Override
+	public Sequential Sequential(IModule... modules) {
+		return new Sequential(this, modules);
+	}
+	
+	
 }

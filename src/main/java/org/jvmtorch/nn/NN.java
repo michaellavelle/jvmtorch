@@ -16,6 +16,7 @@ package org.jvmtorch.nn;
 import org.jvmtorch.nn.functional.Functional;
 import org.jvmtorch.nn.modules.MSELoss;
 import org.jvmtorch.nn.modules.MultiClassCrossEntropyLoss;
+import org.jvmtorch.nn.modules.container.Sequential;
 import org.jvmtorch.torch.Size;
 import org.jvmtorch.torch.Tensor;
 import org.jvmtorch.torch.Torch;
@@ -25,6 +26,8 @@ public interface NN  {
 	public Conv2d<?> Conv2d(int... params);
 	
 	public Linear<?> Linear(int... params);
+	
+	public Sequential Sequential(IModule... modules);
 
 	public MSELoss MSELoss();
 	

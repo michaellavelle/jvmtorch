@@ -13,6 +13,7 @@
  */
 package org.jvmtorch.nn;
 
+import java.util.List;
 import java.util.function.Function;
 
 import org.jvmpy.python.OrderedDict;
@@ -23,6 +24,8 @@ public interface IModule extends BaseModule, Function<Tensor, Tensor>{
 	Tensor forward(Tensor input);
 		
 	OrderedDict<Parameter> parameters();
+	
+	List<IModule> modules();
 	
 	void zero_grad();
 }

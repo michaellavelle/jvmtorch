@@ -13,9 +13,11 @@
  */
 package org.jvmtorch.nn;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -86,6 +88,19 @@ public abstract class Module<M> extends PythonClass<M> implements IModule {
 			}
 		}
 		return moduleParameters;
+	}
+	
+	public List<IModule> modules() {
+		List<IModule> modules = new ArrayList<>();
+		modules.add(this);
+		modules.addAll(getSubModules().stream().flatMap(m -> m.getRight().modules().stream()).collect(Collectors.toList()));
+		List<IModule> withoutDuplicates = new ArrayList<>();
+		for (IModule module : modules) {
+			if (!withoutDuplicates.contains(module)) {
+				withoutDuplicates.add(module);
+			}
+		}
+		return withoutDuplicates;
 	}
 
 	@Override
