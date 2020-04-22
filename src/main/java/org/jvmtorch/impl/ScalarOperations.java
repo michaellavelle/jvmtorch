@@ -164,4 +164,9 @@ public class ScalarOperations implements TensorOperations<ScalarOperations> {
 		throw new UnsupportedOperationException("Not yet implemented");
 	}
 
+	@Override
+	public ScalarOperations cloneTensor() {
+		throw new UnsupportedOperationException("Not yet implemented");
+	}
+
 }

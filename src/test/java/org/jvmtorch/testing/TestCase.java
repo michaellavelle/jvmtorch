@@ -14,6 +14,10 @@ public abstract class TestCase<T extends TestCase<T>> extends PythonClass<T>{
 		Assert.assertEquals(expected, actual);
 	}
 	
+	protected void assertArrayEqual(float[] actual, float[] expected, float delta) {
+		Assert.assertArrayEquals(expected, actual, delta);
+	}
+	
 	protected void assertIs(Object actual, Object expected) {
 		Assert.assertSame(expected, actual);
 	}

@@ -1,7 +1,6 @@
 package org.jvmtorch.torch;
 
 import static org.jvmpy.python.Python.len;
-import static org.jvmpy.python.Python.print;
 import static org.jvmtorch.JvmTorch.torch;
 
 import org.junit.Assert;
@@ -37,7 +36,6 @@ public class AutogradTest extends TestCase<AutogradTest> {
 		self.assertIsNotNone(a.grad_fn());
 		var next_functions = a.grad_fn().next_functions();
 		Assert.assertEquals(len(next_functions), 2);
-		print(next_functions.get(0, 0));
 		self.assertEqual(next_functions.get(0, 0).toString(), "<AccumulateGrad object>");
 		//self.assertEqual(next_functions.get(0,  1), 0);  // TODO - uncomment
 		self.assertEqual(next_functions.get(1, 0).toString(), "<AccumulateGrad object>");
@@ -50,6 +48,69 @@ public class AutogradTest extends TestCase<AutogradTest> {
 		//Assert.assertNull(next_functions.get(1, 0)); // TODO - uncomment
 
 	}
+
+	
+	@Test
+	public void test_hessian_vector() {
+		
+	
+	        var x = torch.rand(2, 2).requires_grad_(true);
+	        var y = torch.rand(2, 2).requires_grad_(true);
+
+	        var z = x.mul(x).add(y.mul(x).add(y.mul(y)));
+	        z.backward(torch.ones(2, 2), true); // create_graph=True
+	        
+	        //with torch.no_grad():
+	        x.requires_grad_(false);
+	        y.requires_grad_(false);
+	        
+		        var x_grad = x.mul(2).add(y);
+		        var y_grad = x.add(y.mul(2));
+		 
+		        self.assertArrayEqual(x.grad().getDataAsFloatArray(), x_grad.getDataAsFloatArray(), 0.0001f);
+		        self.assertArrayEqual(y.grad().getDataAsFloatArray(), y_grad.getDataAsFloatArray(), 0.0001f);
+		     
+	        x.requires_grad_(true);
+	        y.requires_grad_(true);
+	        	        	        
+	        var grad_sum = x.grad().mul(2).add(y.grad());
+	        
+	        grad_sum.backward(torch.ones(2, 2));
+	        var x_hv = torch.ones(2, 2).mul(5); // Should be ones not zeros with create graph
+	        var y_hv = torch.ones(2, 2).mul(4); // Should be ones not zeros with create graph
+
+	        self.assertArrayEqual(x.grad().getDataAsFloatArray(), x_grad.add(x_hv).getDataAsFloatArray(), 0.0001f);
+	        self.assertArrayEqual(y.grad().getDataAsFloatArray(), y_grad.add(y_hv).getDataAsFloatArray(), 0.0001f);
+	}
+	
+	@Test(expected=IllegalStateException.class)
+	public void test_hessian_vector_without_create_graph() {
+		
+	        var x = torch.rand(2, 2).requires_grad_(true);
+	        var y = torch.rand(2, 2).requires_grad_(true);
+
+	        var z = x.mul(x).add(y.mul(x).add(y.mul(y)));
+
+	        z.backward(torch.ones(2, 2)); // create_graph=False
+	        
+	        //with torch.no_grad():
+	        x.requires_grad_(false);
+	        y.requires_grad_(false);
+	        
+		        var x_grad = x.mul(2).add(y);
+		        var y_grad = x.add(y.mul(2));
+		 
+		        self.assertArrayEqual(x.grad().getDataAsFloatArray(), x_grad.getDataAsFloatArray(), 0.0001f);
+		        self.assertArrayEqual(y.grad().getDataAsFloatArray(), y_grad.getDataAsFloatArray(), 0.0001f);
+		     
+	        x.requires_grad_(true);
+	        y.requires_grad_(true);
+	        
+	        var grad_sum = x.grad().mul(2).add(y.grad());
+	        
+	        grad_sum.backward(torch.ones(2, 2));
+	}
+
 
 	@Override
 	protected AutogradTest self() {

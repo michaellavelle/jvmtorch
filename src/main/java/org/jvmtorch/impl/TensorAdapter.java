@@ -245,4 +245,25 @@ public class TensorAdapter implements Tensor {
 	public Tensor norm() {
 		return adapted.norm();
 	}
+
+	@Override
+	public Tensor cloneTensor() {
+		return adapted.cloneTensor();
+	}
+
+	@Override
+	public boolean create_graph() {
+		return adapted.create_graph();
+	}
+
+	@Override
+	public Tensor create_graph_(boolean create_graph) {
+		adapted.create_graph_(true);
+		return this;
+	}
+	
+	@Override
+	public void backward(Tensor gradient, boolean create_graph) {
+		adapted.backward(gradient, create_graph);
+	}
 }

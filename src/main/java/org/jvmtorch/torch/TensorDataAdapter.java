@@ -186,4 +186,9 @@ public class TensorDataAdapter<A extends TensorOperations<A>> implements TensorD
 	public TensorData norm() {
 		return createTensorDataFromTensorOperations((adapted.norm()));
 	}
+
+	@Override
+	public TensorData cloneTensor() {
+		return createTensorDataFromTensorOperations((adapted.cloneTensor()));
+	}
 }

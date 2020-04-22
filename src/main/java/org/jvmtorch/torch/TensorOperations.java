@@ -49,6 +49,8 @@ public interface TensorOperations<T> extends Supplier<T>, TensorDataContainer {
 	
 	T rowSums();
 
+	T cloneTensor();
+
 
 	T sub_(T other);
 

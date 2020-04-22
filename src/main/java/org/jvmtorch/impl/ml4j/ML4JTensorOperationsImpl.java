@@ -366,4 +366,9 @@ public class ML4JTensorOperationsImpl implements ML4JTensorOperations, Operatabl
 		//matrix.close();
 	}
 
+	@Override
+	public ML4JTensorOperations cloneTensor() {
+		return toML4JTensorOperations(matrix.dup(), size());
+	}
+
 }
