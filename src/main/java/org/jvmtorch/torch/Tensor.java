@@ -21,11 +21,17 @@ public interface Tensor extends TensorOperations<Tensor> {
 
 	void backward(Tensor gradient);
 	
+	void backward(Tensor gradient, boolean create_graph);
+	
 	void backward();
 
 	Tensor grad_fn_(GradFunction grad_fn);
 
 	boolean requires_grad();
+	
+	boolean create_graph();
+	
+	Tensor create_graph_(boolean create_graph);
 	
 	Tuple<String> names();
 	

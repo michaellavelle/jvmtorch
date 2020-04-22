@@ -20,7 +20,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -58,6 +57,7 @@ public class TensorBase extends PythonClass<Tensor> implements Tensor {
 	protected Tensor grad;
 	protected GradFunction grad_fn;
 	protected boolean requires_grad;
+	protected boolean create_graph;
 	protected TensorDataConverter<?> tensorDataConverter;
 
 	public Torch torch() {
@@ -113,8 +113,8 @@ public class TensorBase extends PythonClass<Tensor> implements Tensor {
 	void performInlineOperation(Operation<TensorData, Size> operation) {
 		if (requires_grad) {
 			// TODO. Amend this method so it throws exception unless in a backward pass.
-			// throw new IllegalStateException("a leaf Variable that requires grad has been
-			// used in an in-place operation:" + operation.name());
+			throw new IllegalStateException("a leaf Variable that requires grad has been used "
+					+ "in an in-place operation:" + operation.name());
 		}
 		symbolicTensor.performInlineOperation(operation);
 	}
@@ -294,6 +294,14 @@ public class TensorBase extends PythonClass<Tensor> implements Tensor {
 				performUnaryMappingOperation(new TensorOperationImpl<>(torch, "T", t -> t.t(), s -> size().t())),
 				"TBackward", new TensorOperationImpl<>(torch, "TBackward", t -> t.t(), s -> s.t()));
 	}
+	
+	@Override
+	public Tensor cloneTensor() {
+
+		return toTensor(
+				performUnaryMappingOperation(new TensorOperationImpl<>(torch, "Clone", t -> t.cloneTensor(), s -> size())),
+				"CloneBackward", new TensorOperationImpl<>(torch, "CloneBackward", t -> t, s -> s));
+	}
 
 	@Override
 	public Tensor columnSums() {
@@ -333,7 +341,7 @@ public class TensorBase extends PythonClass<Tensor> implements Tensor {
 	
 
 	private UnaryOperator<Tensor> normBackward() {
-		throw new UnsupportedOperationException("Not yet implemented");
+		return t -> { throw new UnsupportedOperationException("Not yet implemented"); };
 	}
 
 	@Override
@@ -360,6 +368,7 @@ public class TensorBase extends PythonClass<Tensor> implements Tensor {
 		UnaryOperator<Size> sizeFunction = tensorOperation.sizeFunction(new ImmutablePair<>(size(), other.size()));
 
 		if (other.requires_grad()) {
+			this.requires_grad_(true);
 			return toTensor(
 					performUnaryMappingOperation(new TensorOperationImpl<>(torch, tensorOperation.name(),
 							forwardPropFunction, sizeFunction)),
@@ -403,7 +412,7 @@ public class TensorBase extends PythonClass<Tensor> implements Tensor {
 			if (this.grad_fn() != null) {
 				Tensor t = createDefaultTensor(torch, tensor).withNextFunctions(name, Arrays.asList(operation),
 						tuple(tuple(this.grad_fn())));
-				return t.requires_grad_(True);
+				return t.requires_grad_(True).create_graph_(create_graph);
 			} else {
 
 				if (tensor.size().dimensionNames() != null) {
@@ -412,7 +421,7 @@ public class TensorBase extends PythonClass<Tensor> implements Tensor {
 									Arrays.asList(new TensorOperationImpl<>(torch, "AccumulateGrad", l -> l, s -> s)),
 									this, null))));
 
-					return t.requires_grad_(True);
+					return t.requires_grad_(True).create_graph_(create_graph);
 
 				} else {
 					Tensor t = createDefaultTensor(torch, tensor).withNextFunctions(name, Arrays.asList(operation),
@@ -420,13 +429,13 @@ public class TensorBase extends PythonClass<Tensor> implements Tensor {
 									Arrays.asList(new TensorOperationImpl<>(torch, "AccumulateGrad", l -> l, s -> s)),
 									this, null))));
 
-					return t.requires_grad_(True);
+					return t.requires_grad_(True).create_graph_(create_graph);
 
 				}
 			}
 
 		} else {
-			return createDefaultTensor(torch, tensor);
+			return createDefaultTensor(torch, tensor).create_graph_(create_graph);
 		}
 	}
 
@@ -445,14 +454,15 @@ public class TensorBase extends PythonClass<Tensor> implements Tensor {
 
 	protected Tensor toTensor(SymbolicTensor<TensorData, Size> tensor, String name, List<Tensor> tensors,
 			List<TensorOperation<Tensor, Size>> operations) {
+		boolean create_graph = tensors.stream().anyMatch(t -> t.create_graph());
 		if (this.requires_grad()) {
 			Tensor t = createDefaultTensor(torch, tensor).withNextFunctions(name, operations,
 					getGradFunctionTuples(tensors));
 
-			return t.requires_grad_(True);
+			return t.requires_grad_(True).create_graph_(create_graph);
 
 		} else {
-			return createDefaultTensor(torch, tensor); 
+			return createDefaultTensor(torch, tensor).create_graph_(create_graph); 
 		}
 	}
 
@@ -487,9 +497,9 @@ public class TensorBase extends PythonClass<Tensor> implements Tensor {
 	private SymbolicTensor<TensorData, Size> toSymbolicTensor(TensorData tensor) {
 		return new SymbolicTensorAdapter<TensorData, Size>(tensor, tensor.size());
 	}
-
+	
 	@Override
-	public void backward(Tensor gradient) {
+	public void backward(Tensor gradient, boolean create_graph) {
 		if (gradient == null) {
 			if (this.numel() == 1) {
 				gradient = torch.ones(torch.Size(1, 1));
@@ -509,11 +519,19 @@ public class TensorBase extends PythonClass<Tensor> implements Tensor {
 			}
 		}
 
-		backwardRecursive(grad_fn(), gradient);
-
+		backwardRecursive(grad_fn(), gradient, create_graph);
 	}
 
-	public <T extends TensorOperations<T>> void backwardRecursive(GradFunction gf, Tensor back) {
+	@Override
+	public void backward(Tensor gradient) {
+		if (!this.requires_grad() && this.grad_fn() == null) {
+			throw new IllegalStateException("Tensor does not require grad and does not have a grad_fn");
+		}
+		
+		backward(gradient, create_graph);
+	}
+
+	private <T extends TensorOperations<T>> void backwardRecursive(GradFunction gf, Tensor back, boolean create_graph) {
 
 		if (back == null) {
 			throw new RuntimeException("backwardRecursive input tensor cannot be null");
@@ -540,28 +558,47 @@ public class TensorBase extends PythonClass<Tensor> implements Tensor {
 
 					Tuple<GradFunction> gf2Tuple = gf.next_functions().get(index);
 					GradFunction gf2 = gf2Tuple.get(0);
-					backwardRecursive(gf2, modifiedBack);
+					backwardRecursive(gf2, modifiedBack, create_graph);
 					index++;
 				}
 			} else {
 				Tensor target = gf.variable();
 				if (target != null) {
-					if (!IntStream.of(target.size().dimensions()).boxed().collect(Collectors.toList())
-							.equals(IntStream.of(back.size().dimensions()).boxed().collect(Collectors.toList()))) {
-						throw new IllegalArgumentException("Dimensions don't match:"
-								+ IntStream.of(target.size().dimensions()).boxed().collect(Collectors.toList()) + " vs "
-								+ IntStream.of(back.size().dimensions()).boxed().collect(Collectors.toList()));
-					}
-
+					
 					if (!SizeMatcher.isSizeMatch(target.size(), back.size())) {
 						throw new IllegalArgumentException(
 								"Dimension names don't match:" + target.names() + " vs " + back.names());
 					}
+				
 					if (target.grad() == null) {
-						target.grad_(back);
-					} else {
-						target.grad().add_(back);
+						if (create_graph) {
+							var accumulated = torch.zeros(back.size())
+									.requires_grad_(true).add(back);
+							accumulated = accumulated.cloneTensor();;
+							accumulated.create_graph_(create_graph);
+							target.grad_(accumulated);
+						} else {
+							var accumulated = torch.zeros(back.size())
+									.requires_grad_(false).add_(back);
+							accumulated.create_graph_(false);
+							target.grad_(accumulated);
+						}
+						
+					}  else {
+						if (create_graph) {
+	
+							var accumulated = target.grad().add(back);
+							accumulated.create_graph_(true).requires_grad_(true);
+							accumulated = accumulated.cloneTensor();;
+							target.grad_(accumulated);
+						} else {
+							
+							var accumulated = target.grad().requires_grad_(false).add_(back);
+							accumulated.create_graph_(false).requires_grad_(false);
+							target.grad_(accumulated);
+						}
 					}
+				
 					target.backward(back);
 				}
 			}
@@ -650,5 +687,17 @@ public class TensorBase extends PythonClass<Tensor> implements Tensor {
 		}
 		return getDataAsFloatArray()[0];
 	}
+
+	@Override
+	public boolean create_graph() {
+		return create_graph;
+	}
+
+	@Override
+	public Tensor create_graph_(boolean create_graph) {
+		this.create_graph = create_graph;
+		return this;
+	}
+
 
 }
