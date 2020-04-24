@@ -157,11 +157,6 @@ public class TensorDataAdapter<A extends TensorOperations<A>> implements TensorD
 	}
 
 	@Override
-	public TensorData view(int i, int j) {
-		return createTensorDataFromTensorOperations(adapted.view(i, j));
-	}
-
-	@Override
 	public TensorData view(Size size) {
 		return createTensorDataFromTensorOperations((adapted.view(size)));
 	}

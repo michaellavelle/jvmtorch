@@ -2,7 +2,7 @@ package org.jvmtorch.impl.ml4j;
 
 import org.jvmpy.symbolictensors.SymbolicTensor;
 import org.jvmtorch.impl.ScalarImpl;
-import org.jvmtorch.impl.TensorBase;
+import org.jvmtorch.impl.TensorImpl;
 import org.jvmtorch.torch.Size;
 import org.jvmtorch.torch.Tensor;
 import org.jvmtorch.torch.TensorData;
@@ -19,7 +19,7 @@ import org.ml4j.nn.neurons.format.NeuronsActivationFormat;
 import org.ml4j.nn.neurons.format.features.DimensionScope;
 import org.ml4j.nn.neurons.format.features.FeaturesFormat;
 
-public class ML4JTensor extends TensorBase {
+public class ML4JTensor extends TensorImpl {
 
 	private final DirectedComponentsContext directedComponentsContext;
 	private final TensorDataConverter<ML4JTensorOperations> tensorDataConverter;
@@ -104,7 +104,6 @@ public class ML4JTensor extends TensorBase {
 		boolean needToTranspose = false;
 
 		if (target != null && format.getFeatureOrientation() != target) {
-			// .out.println("TRANSPOSING");
 			needToTranspose = true;
 		}
 

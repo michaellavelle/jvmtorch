@@ -2,9 +2,12 @@ package org.jvmtorch.impl.ml4j;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
 
 import org.jvmpy.symbolictensors.Operatable;
 import org.jvmpy.symbolictensors.Operation;
+import org.jvmtorch.impl.ml4j.ML4JTensorOperations;
 import org.jvmtorch.torch.Size;
 import org.jvmtorch.torch.Torch;
 import org.ml4j.EditableMatrix;
@@ -100,20 +103,34 @@ public class ML4JTensorOperationsImpl implements ML4JTensorOperations, Operatabl
 	}
 
 	@Override
-	public ML4JTensorOperations sub_(ML4JTensorOperations mul) {
-		matrix.asEditableMatrix().subi(mul.getMatrix());
-		return this;
+	public ML4JTensorOperations sub_(ML4JTensorOperations other) {
+		return apply_(other, m -> m.subiColumnVector(other.getMatrix()),
+				m -> m.subiRowVector(other.getMatrix()), m -> m.subi(other.getMatrix()));
 	}
 
 	@Override
-	public ML4JTensorOperations mul_(ML4JTensorOperations mul) {
-		matrix.asEditableMatrix().muli(mul.getMatrix());
-		return this;
+	public ML4JTensorOperations mul_(ML4JTensorOperations other) {
+		return apply_(other, m -> m.muliColumnVector(other.getMatrix()),
+				m -> m.muliRowVector(other.getMatrix()), m -> m.muli(other.getMatrix()));
 	}
 
 	@Override
-	public ML4JTensorOperations add_(ML4JTensorOperations mul) {
-		matrix.asEditableMatrix().addi(mul.getMatrix());
+	public ML4JTensorOperations add_(ML4JTensorOperations other) {
+		return apply_(other, m -> m.addiColumnVector(other.getMatrix()),
+				m -> m.addiRowVector(other.getMatrix()), m -> m.addi(other.getMatrix()));
+	}
+	
+	private ML4JTensorOperations apply_(ML4JTensorOperations other, Consumer<EditableMatrix> columnVectorOp,
+			Consumer<EditableMatrix> rowVectorOp, Consumer<EditableMatrix> matrixOp) {
+		if (requiresSecondMatrixColumnBroadcast(matrix, other.getMatrix())) {
+			columnVectorOp.accept(matrix.asEditableMatrix());
+							
+		} else if ( requiresSecondMatrixRowsBroadcast(matrix, other.getMatrix())) {
+			rowVectorOp.accept(matrix.asEditableMatrix());
+
+		} else {
+			matrixOp.accept(matrix.asEditableMatrix());
+		}
 		return this;
 	}
 
@@ -125,7 +142,8 @@ public class ML4JTensorOperationsImpl implements ML4JTensorOperations, Operatabl
 
 	@Override
 	public ML4JTensorOperations mul(ML4JTensorOperations other) {
-		return toML4JTensorOperations(matrix.mul(other.getMatrix()), size);
+		return apply(other, m -> m.mulColumnVector(other.getMatrix()),
+				m -> m.mulRowVector(other.getMatrix()), m -> m.mul(other.getMatrix()));
 	}
 
 	@Override
@@ -135,52 +153,35 @@ public class ML4JTensorOperationsImpl implements ML4JTensorOperations, Operatabl
 
 	@Override
 	public ML4JTensorOperations add(ML4JTensorOperations other) {
-				
+		return apply(other, m -> m.addColumnVector(other.getMatrix()),
+				m -> m.addRowVector(other.getMatrix()), m -> m.add(other.getMatrix()));
+	}
+	
+	private ML4JTensorOperations apply(ML4JTensorOperations other, UnaryOperator<Matrix> columnVectorOp,
+			UnaryOperator<Matrix> rowVectorOp, UnaryOperator<Matrix> matrixOp) {
+		
 		if (requiresSecondMatrixColumnBroadcast(matrix, other.getMatrix())) {
-			return toML4JTensorOperations(matrix.addColumnVector(other.getMatrix()), size);
-
+			return toML4JTensorOperations(columnVectorOp.apply(matrix), size);
+					
 		} else if ( requiresSecondMatrixRowsBroadcast(matrix, other.getMatrix())) {
-			return toML4JTensorOperations(matrix.addRowVector(other.getMatrix()), size);
+			return toML4JTensorOperations(rowVectorOp.apply(matrix), size);
 
 		} else {
-			return toML4JTensorOperations(matrix.add(other.getMatrix()), size);
+			return toML4JTensorOperations(matrixOp.apply(matrix), size);
 		}
-
 	}
 	
 	@Override
 	public ML4JTensorOperations div(ML4JTensorOperations other) {
-			
-	
-		
-		if (requiresSecondMatrixColumnBroadcast(matrix, other.getMatrix())) {
-			return toML4JTensorOperations(matrix.divColumnVector(other.getMatrix()), size);
-
-		} else if ( requiresSecondMatrixRowsBroadcast(matrix, other.getMatrix())) {
-			return toML4JTensorOperations(matrix.divRowVector(other.getMatrix()), size);
-
-		} else {
-			return toML4JTensorOperations(matrix.div(other.getMatrix()), size);
-		}
-
+		return apply(other, m -> m.divColumnVector(other.getMatrix()),
+				m -> m.divRowVector(other.getMatrix()), m -> m.div(other.getMatrix()));
 	}
 	
 
 	@Override
 	public ML4JTensorOperations sub(ML4JTensorOperations other) {
-			
-	
-		
-		if (requiresSecondMatrixColumnBroadcast(matrix, other.getMatrix())) {
-			return toML4JTensorOperations(matrix.subColumnVector(other.getMatrix()), size);
-
-		} else if ( requiresSecondMatrixRowsBroadcast(matrix, other.getMatrix())) {
-			return toML4JTensorOperations(matrix.subRowVector(other.getMatrix()), size);
-
-		} else {
-			return toML4JTensorOperations(matrix.sub(other.getMatrix()), size);
-		}
-
+		return apply(other, m -> m.subColumnVector(other.getMatrix()),
+				m -> m.subRowVector(other.getMatrix()), m -> m.sub(other.getMatrix()));
 	}
 	
 	@Override

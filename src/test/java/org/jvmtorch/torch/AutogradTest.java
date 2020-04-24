@@ -8,6 +8,336 @@ import org.junit.Test;
 import org.jvmtorch.testing.TestCase;
 
 public class AutogradTest extends TestCase<AutogradTest> {
+	
+	@Test
+	public void test_scalartensor_addition() {
+		var a = torch.randn(2, 2).requires_grad_(true);
+		var b = torch.randn().requires_grad_(true);
+		var c = a.add(b);
+		
+		self.assertTrue(a.requires_grad());
+		self.assertTrue(b.requires_grad());
+		
+		c.backward(torch.ones(2, 2).mul(2f));
+
+		self.assertTrue(b.grad().size().dimensions().length == 0);
+		self.assertTrue(b.grad().numel() == 1);
+		self.assertEqual(b.grad().item(), 8f);
+		
+		self.assertArrayEqual(a.grad().getDataAsFloatArray(), torch.ones(2, 2).mul(2f).getDataAsFloatArray(), 0.0001f);
+	}
+	
+	@Test
+	public void test_scalartensor_addition_second_without_requires_grad() {
+		var a = torch.randn(2, 2).requires_grad_(true);
+		var b = torch.randn();
+		var c = a.add(b);
+		
+		self.assertTrue(a.requires_grad());
+		self.assertFalse(b.requires_grad());
+		
+		c.backward(torch.ones(2, 2).mul(2f));
+		
+		self.assertTrue(a.requires_grad());
+		self.assertFalse(b.requires_grad());
+
+		self.assertIsNone(b.grad());
+		
+		self.assertArrayEqual(a.grad().getDataAsFloatArray(), torch.ones(2, 2).mul(2f).getDataAsFloatArray(), 0.0001f);
+	}
+	
+	@Test
+	public void test_scalartensor_addition_first_without_requires_grad() {
+		var a = torch.randn(2, 2);
+		var b = torch.randn().requires_grad_(true);
+		var c = a.add(b);
+		
+		self.assertTrue(c.requires_grad());
+		self.assertFalse(a.requires_grad());
+		self.assertTrue(b.requires_grad());
+		
+		c.backward(torch.ones(2, 2).mul(2f));
+
+		self.assertTrue(b.grad().size().dimensions().length == 0);
+		self.assertTrue(b.grad().numel() == 1);
+		self.assertEqual(b.grad().item(), 8f);
+		
+		self.assertIsNone(a.grad());
+	}
+	
+	
+	@Test
+	public void test_scalartensor_addition_reversed() {
+		var a = torch.randn(2, 2).requires_grad_(true);
+		var b = torch.randn().requires_grad_(true);		
+		
+		var c = b.add(a);
+		
+		self.assertTrue(a.requires_grad());
+		self.assertTrue(b.requires_grad());
+		
+		c.backward(torch.ones(2, 2).mul(2f));
+
+		self.assertTrue(b.grad().size().dimensions().length == 0);
+		self.assertTrue(b.grad().numel() == 1);
+		self.assertEqual(b.grad().item(), 8f);
+		
+		self.assertArrayEqual(a.grad().getDataAsFloatArray(), torch.ones(2, 2).mul(2f).getDataAsFloatArray(), 0.0001f);
+	}
+	
+	//
+	
+	@Test
+	public void test_both_scalartensor_addition() {
+		var a = torch.randn().requires_grad_(true);
+		var b = torch.randn().requires_grad_(true);
+		var c = a.add(b);
+		
+		self.assertTrue(a.requires_grad());
+		self.assertTrue(b.requires_grad());
+		
+		c.backward(torch.ones().mul(2f));
+
+		self.assertTrue(b.grad().size().dimensions().length == 0);
+		self.assertTrue(b.grad().numel() == 1);
+		self.assertEqual(b.grad().item(), 2f);
+		
+		self.assertArrayEqual(a.grad().getDataAsFloatArray(), torch.ones().mul(2f).getDataAsFloatArray(), 0.0001f);
+	}
+	
+	@Test
+	public void test_both_scalartensor_addition_second_without_requires_grad() {
+		var a = torch.randn().requires_grad_(true);
+		var b = torch.randn();
+		var c = a.add(b);
+		
+		self.assertTrue(a.requires_grad());
+		self.assertFalse(b.requires_grad());
+		
+		c.backward(torch.ones().mul(2f));
+		
+		self.assertTrue(a.requires_grad());
+		self.assertFalse(b.requires_grad());
+
+		self.assertIsNone(b.grad());
+		
+		self.assertArrayEqual(a.grad().getDataAsFloatArray(), torch.ones().mul(2f).getDataAsFloatArray(), 0.0001f);
+	}
+	
+	@Test
+	public void test_both_scalartensor_addition_first_without_requires_grad() {
+		var a = torch.randn();
+		var b = torch.randn().requires_grad_(true);
+		var c = a.add(b);
+		
+		self.assertTrue(c.requires_grad());
+		self.assertFalse(a.requires_grad());
+		self.assertTrue(b.requires_grad());
+		
+		c.backward(torch.ones().mul(2f));
+
+		self.assertTrue(b.grad().size().dimensions().length == 0);
+		self.assertTrue(b.grad().numel() == 1);
+		self.assertEqual(b.grad().item(), 2f);
+		
+		self.assertIsNone(a.grad());
+	}
+	
+	
+	@Test
+	public void test_both_scalartensor_addition_reversed() {
+		var a = torch.randn().requires_grad_(true);
+		var b = torch.randn().requires_grad_(true);		
+		
+		var c = b.add(a);
+		
+		self.assertTrue(a.requires_grad());
+		self.assertTrue(b.requires_grad());
+		
+		c.backward(torch.ones().mul(2f));
+
+		self.assertTrue(b.grad().size().dimensions().length == 0);
+		self.assertTrue(b.grad().numel() == 1);
+		self.assertEqual(b.grad().item(), 2f);
+		
+		self.assertArrayEqual(a.grad().getDataAsFloatArray(), torch.ones().mul(2f).getDataAsFloatArray(), 0.0001f);
+	}
+	
+	@Test
+	public void test_scalarbroadcast_addition() {
+		var a = torch.randn(2, 2).requires_grad_(true);
+		var b = torch.randn(1, 1).requires_grad_(true);
+		var c = a.add(b);
+		
+		self.assertTrue(a.requires_grad());
+		self.assertTrue(b.requires_grad());
+		
+		c.backward(torch.ones(2, 2).mul(2f));
+
+		self.assertTrue(b.grad().size().dimensions().length == 2);
+		self.assertTrue(b.grad().numel() == 1);
+		self.assertEqual(b.grad().item(), 8f);
+		
+		self.assertArrayEqual(a.grad().getDataAsFloatArray(), torch.ones(2, 2).mul(2f).getDataAsFloatArray(), 0.0001f);
+	}
+	
+	@Test
+	public void test_scalarbroadcast_addition_second_without_requires_grad() {
+		var a = torch.randn(2, 2).requires_grad_(true);
+		var b = torch.randn(1, 1);
+		var c = a.add(b);
+		
+		self.assertTrue(a.requires_grad());
+		self.assertFalse(b.requires_grad());
+		
+		c.backward(torch.ones(2, 2).mul(2f));
+		
+		self.assertTrue(a.requires_grad());
+		self.assertFalse(b.requires_grad());
+
+		self.assertIsNone(b.grad());
+		
+		self.assertArrayEqual(a.grad().getDataAsFloatArray(), torch.ones(2, 2).mul(2f).getDataAsFloatArray(), 0.0001f);
+	}
+	
+	@Test
+	public void test_scalarbroadcast_addition_first_without_requires_grad() {
+		var a = torch.randn(2, 2);
+		var b = torch.randn(1, 1).requires_grad_(true);
+		var c = a.add(b);
+		
+		self.assertTrue(c.requires_grad());
+		self.assertFalse(a.requires_grad());
+		self.assertTrue(b.requires_grad());
+		
+		c.backward(torch.ones(2, 2).mul(2f));
+
+		self.assertTrue(b.grad().size().dimensions().length == 2);
+		self.assertTrue(b.grad().numel() == 1);
+		self.assertEqual(b.grad().item(), 8f);
+		
+		self.assertIsNone(a.grad());
+	}
+	
+	
+	@Test
+	public void test_scalarbroadcast_addition_reversed() {
+		var a = torch.randn(2, 2).requires_grad_(true);
+		var b = torch.randn(1, 1).requires_grad_(true);		
+		
+		var c = b.add(a);
+		
+		self.assertTrue(a.requires_grad());
+		self.assertTrue(b.requires_grad());
+		
+		c.backward(torch.ones(2, 2).mul(2f));
+
+		self.assertTrue(b.grad().size().dimensions().length == 2);
+		self.assertTrue(b.grad().numel() == 1);
+		self.assertEqual(b.grad().item(), 8f);
+		
+		self.assertArrayEqual(a.grad().getDataAsFloatArray(), torch.ones(2, 2).mul(2f).getDataAsFloatArray(), 0.0001f);
+	}
+	
+	
+	@Test
+	public void test_tensor_addition() {
+		var a = torch.randn(2, 2).requires_grad_(true);
+		var b = torch.randn(2, 2).requires_grad_(true);
+		var c = a.add(b);
+		
+		self.assertTrue(a.requires_grad());
+		self.assertTrue(b.requires_grad());
+		
+		c.backward(torch.ones(2, 2).mul(2f));
+
+		
+		self.assertArrayEqual(a.grad().getDataAsFloatArray(), torch.ones(2, 2).mul(2f).getDataAsFloatArray(), 0.0001f);
+		self.assertArrayEqual(b.grad().getDataAsFloatArray(), torch.ones(2, 2).mul(2f).getDataAsFloatArray(), 0.0001f);
+	}
+	
+	@Test
+	public void test_tensor_addition_second_without_requires_grad() {
+		var a = torch.randn(2, 2).requires_grad_(true);
+		var b = torch.randn(2, 2);
+		var c = a.add(b);
+		
+		self.assertTrue(a.requires_grad());
+		self.assertFalse(b.requires_grad());
+		
+		c.backward(torch.ones(2, 2).mul(2f));
+		
+		self.assertTrue(a.requires_grad());
+		self.assertFalse(b.requires_grad());
+
+		self.assertIsNone(b.grad());
+		
+		self.assertArrayEqual(a.grad().getDataAsFloatArray(), torch.ones(2, 2).mul(2f).getDataAsFloatArray(), 0.0001f);
+	}
+	
+	@Test
+	public void test_tensor_addition_first_without_requires_grad() {
+		var a = torch.randn(2, 2);
+		var b = torch.randn(2, 2).requires_grad_(true);
+		var c = a.add(b);
+		
+		self.assertTrue(c.requires_grad());
+		self.assertFalse(a.requires_grad());
+		self.assertTrue(b.requires_grad());
+		
+		c.backward(torch.ones(2, 2).mul(2f));
+
+		self.assertArrayEqual(b.grad().getDataAsFloatArray(), torch.ones(2, 2).mul(2f).getDataAsFloatArray(), 0.0001f);
+		self.assertArrayEqual(b.grad().getDataAsFloatArray(), torch.ones(2, 2).mul(2f).getDataAsFloatArray(), 0.0001f);
+		
+		self.assertIsNone(a.grad());
+	}
+	
+	@Test
+	public void test_tensor_addition_reversed() {
+		var a = torch.randn(2, 2).requires_grad_(true);
+		var b = torch.randn(2, 2).requires_grad_(true);
+		var c = b.add(a);
+		
+		self.assertTrue(a.requires_grad());
+		self.assertTrue(b.requires_grad());
+		
+		c.backward(torch.ones(2, 2).mul(2f));
+
+		
+		self.assertArrayEqual(a.grad().getDataAsFloatArray(), torch.ones(2, 2).mul(2f).getDataAsFloatArray(), 0.0001f);
+		self.assertArrayEqual(b.grad().getDataAsFloatArray(), torch.ones(2, 2).mul(2f).getDataAsFloatArray(), 0.0001f);
+	}
+
+	
+	@Test
+	public void test_scalar_addition() {
+		var a = torch.randn(2, 2).requires_grad_(true);
+		var b = (float)Math.random();
+		var c = a.add(b);
+		
+		self.assertTrue(a.requires_grad());
+		
+		c.backward(torch.ones(2, 2).mul(2f));
+		
+		self.assertTrue(a.requires_grad());
+
+		self.assertArrayEqual(a.grad().getDataAsFloatArray(), torch.ones(2, 2).mul(2f).getDataAsFloatArray(), 0.0001f);
+
+	}
+	
+	@Test(expected = IllegalStateException.class)
+	public void test_scalar_addition_without_requires_grad() {
+		var a = torch.randn(2, 2);
+		var b = (float)Math.random();
+		var c = a.add(b);
+		
+		self.assertFalse(a.requires_grad());
+		
+		c.backward(torch.ones(2, 2).mul(2f));
+
+	}
+	
 
 	@Test
 	public void test_requires_grad_inplace() {

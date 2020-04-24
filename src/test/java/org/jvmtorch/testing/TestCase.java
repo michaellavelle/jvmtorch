@@ -10,6 +10,10 @@ public abstract class TestCase<T extends TestCase<T>> extends PythonClass<T>{
 		Assert.assertTrue(condition);
 	}
 	
+	protected void assertFalse(boolean condition) {
+		Assert.assertFalse(condition);
+	}
+	
 	protected void assertEqual(Object actual, Object expected) {
 		Assert.assertEquals(expected, actual);
 	}
@@ -24,6 +28,10 @@ public abstract class TestCase<T extends TestCase<T>> extends PythonClass<T>{
 	
 	protected void assertIsNotNone(Object object) {
 		Assert.assertNotNull(object);
+	}
+	
+	protected void assertIsNone(Object object) {
+		Assert.assertNull(object);
 	}
 
 }

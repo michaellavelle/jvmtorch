@@ -7,7 +7,7 @@ import org.ml4j.Matrix;
 import org.ml4j.nn.components.DirectedComponentsContext;
 
 
-public interface ML4JTensorOperations extends TensorOperations<ML4JTensorOperations>, Operatable<ML4JTensorOperations, Size, ML4JTensorOperations> {
+public interface ML4JTensorOperations extends TensorOperations<ML4JTensorOperations>, Operatable<ML4JTensorOperations, Size, ML4JTensorOperations>{
 
 	Matrix getMatrix();
 
