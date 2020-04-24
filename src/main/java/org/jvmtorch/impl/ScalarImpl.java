@@ -21,9 +21,9 @@ import org.jvmtorch.torch.TensorDataAdapter;
 import org.jvmtorch.torch.TensorDataConverter;
 import org.jvmtorch.torch.Torch;
 
-public class ScalarImpl extends TensorBase {
+public class ScalarImpl extends TensorImpl {
 	
-	public ScalarImpl(Torch torch, String name, String inputName,
+	public ScalarImpl(Torch torch, 
 			TensorData tensorData) {
 		super(torch, new ScalarDataConverter(torch), tensorData);
 	}
@@ -33,7 +33,7 @@ public class ScalarImpl extends TensorBase {
 		super(torch, new ScalarDataConverter(torch), symbolicTensor);
 	}
 	
-	public ScalarImpl(Torch torch, String name, String inputName,
+	public ScalarImpl(Torch torch,
 			float value) {
 		super(torch, new ScalarDataConverter(torch), new TensorDataAdapter<>(new ScalarOperations(torch, value), new ScalarDataConverter(torch)));
 	}

@@ -125,13 +125,12 @@ public class ScalarOperations implements TensorOperations<ScalarOperations> {
 	}
 
 	@Override
-	public ScalarOperations view(int i, int j) {
-		throw new UnsupportedOperationException("Not yet implemented");
-	}
-
-	@Override
 	public ScalarOperations view(Size size) {
-		throw new UnsupportedOperationException("Not yet implemented");
+		if (size.dimensions().length == 0) {
+			return new ScalarOperations(torch, value);
+		} else {
+			throw new IllegalArgumentException("Size is not compatible");
+		}
 	}
 
 	@Override

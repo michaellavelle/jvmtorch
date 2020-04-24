@@ -14,6 +14,7 @@
 package org.jvmtorch.torch;
 
 import java.util.List;
+import java.util.function.UnaryOperator;
 
 import org.jvmpy.python.Tuple;
 
@@ -26,6 +27,8 @@ public interface Tensor extends TensorOperations<Tensor> {
 	void backward();
 
 	Tensor grad_fn_(GradFunction grad_fn);
+	
+	TensorOperation<Tensor, Size> createBackwardOperation(String operationName, UnaryOperator<Tensor> backPropFunction);
 
 	boolean requires_grad();
 	
@@ -49,16 +52,20 @@ public interface Tensor extends TensorOperations<Tensor> {
 
 	TensorData toTensorData();
 	
+	Tensor add(Tensor other);
+	
 	Torch torch();
-
+	
+	int numel();
+	
+	Tensor size_(Size size);
+	
+	Tensor cloneTensor();
+	
 	Tensor requires_grad_(boolean requires_grad);
 
 	public Tensor withNextFunctions(String name, List<TensorOperation<Tensor, Size>> operations, Tuple<Tuple<GradFunction>> nextFunctions);
 
 	Tensor performUnaryMappingOperation(TensorOperation<TensorData, Size> operation, TensorOperation<Tensor, Size> backwardOp);
-
-	Tensor view(int i, int num_flat_features);
-	
-	Tensor view(Size size);
 
 }

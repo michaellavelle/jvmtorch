@@ -54,9 +54,9 @@ public class TensorAddition<T extends TensorOperations<T>> extends Differentiabl
 	 */
 	public <S extends TensorOperations<S>> Pair<UnaryOperator<S>, UnaryOperator<S>> backPropFunctions(Pair<S, S> variables) {
 		if ( variables.getRight().numel() == 1) {
-			return new ImmutablePair<>(g -> g, g -> variables.getRight().mul(0).add(g.numel()).view(torch.Size()));
+			return new ImmutablePair<>(g -> g, g -> g.sum().view(variables.getRight().size()));
 		} else if( variables.getLeft().numel() == 1){
-			return new ImmutablePair<>(g -> variables.getLeft().mul(0).add(g.numel()).view(torch.Size()), g -> g);
+			return new ImmutablePair<>(g -> g.sum().view(variables.getLeft().size()), g -> g);
 		} else {
 			return new ImmutablePair<>(g -> g, g -> g);
 		}

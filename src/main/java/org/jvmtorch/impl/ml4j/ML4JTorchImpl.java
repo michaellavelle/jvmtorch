@@ -1,5 +1,6 @@
 package org.jvmtorch.impl.ml4j;
 
+import org.jvmtorch.impl.ScalarImpl;
 import org.jvmtorch.impl.TorchImpl;
 import org.jvmtorch.torch.Size;
 import org.jvmtorch.torch.Tensor;
@@ -27,7 +28,11 @@ public class ML4JTorchImpl extends TorchImpl<ML4JTensorOperations> implements To
 	}
 	
 	private Tensor createTensorFromMatrix(Size size, Matrix matrix, boolean requires_grad) {
-		return new ML4JTensor(this, directedComponentsContext, tensorDataConverter, createTensorDataFromMatrix(matrix, size), requires_grad);
+		if (size.dimensions().length > 0) {
+			return new ML4JTensor(this, directedComponentsContext, tensorDataConverter, createTensorDataFromMatrix(matrix, size), requires_grad);
+		} else {
+			return new ScalarImpl(this, matrix.get(0));
+		}
 	}
 	
 	public Tensor empty(Size size) {

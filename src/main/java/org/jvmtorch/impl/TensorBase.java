@@ -18,6 +18,7 @@ import static org.jvmpy.python.Python.tuple;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
@@ -29,17 +30,9 @@ import org.jvmpy.symbolictensors.Operation;
 import org.jvmpy.symbolictensors.SymbolicTensor;
 import org.jvmpy.symbolictensors.SymbolicTensorAdapter;
 import org.jvmtorch.impl.operations.tensorscalar.DifferentiableTensorScalarFunction;
-import org.jvmtorch.impl.operations.tensorscalar.ScalarAddition;
-import org.jvmtorch.impl.operations.tensorscalar.ScalarMultiplication;
-import org.jvmtorch.impl.operations.tensorscalar.ScalarSubtraction;
 import org.jvmtorch.impl.operations.tensorscalar.TensorScalarImpl;
-import org.jvmtorch.impl.operations.tensortensor.ColumnVectorAddition;
 import org.jvmtorch.impl.operations.tensortensor.DifferentiableTensorTensorFunction;
-import org.jvmtorch.impl.operations.tensortensor.RowVectorAddition;
 import org.jvmtorch.impl.operations.tensortensor.TensorAddition;
-import org.jvmtorch.impl.operations.tensortensor.TensorMatrixMultiplication;
-import org.jvmtorch.impl.operations.tensortensor.TensorMultiplication;
-import org.jvmtorch.impl.operations.tensortensor.TensorSubtraction;
 import org.jvmtorch.torch.GradFunction;
 import org.jvmtorch.torch.Size;
 import org.jvmtorch.torch.SizeMatcher;
@@ -50,7 +43,7 @@ import org.jvmtorch.torch.TensorOperation;
 import org.jvmtorch.torch.TensorOperations;
 import org.jvmtorch.torch.Torch;
 
-public class TensorBase extends PythonClass<Tensor> implements Tensor {
+public abstract class TensorBase extends PythonClass<Tensor> implements Tensor {
 
 	public SymbolicTensor<TensorData, Size> symbolicTensor;
 	protected Torch torch;
@@ -59,6 +52,8 @@ public class TensorBase extends PythonClass<Tensor> implements Tensor {
 	protected boolean requires_grad;
 	protected boolean create_graph;
 	protected TensorDataConverter<?> tensorDataConverter;
+	// TODO - make thread safe.
+	protected Boolean pre_operation_requires_grad;
 
 	public Torch torch() {
 		return torch;
@@ -150,215 +145,48 @@ public class TensorBase extends PythonClass<Tensor> implements Tensor {
 		return this;
 	}
 
-	protected Tensor createDefaultTensor(Torch torch, SymbolicTensor<TensorData, Size> tensor) {
-		return new TensorBase(torch, tensorDataConverter, tensor);
-	}
-
 	@Override
 	public Size size() {
 		return symbolicTensor.size();
 	}
 
-	@Override
-	public Tensor mul(float value) {
-		return applyScalarOperation(new ScalarMultiplication<>(), value);
-	}
-
-	@Override
-	public Tensor view(int i, int j) {
-
-		if (i == -1 && j == -1) {
-			throw new RuntimeException("only one dimension can be inferred");
-		} else {
-			if (i == -1) {
-				i = this.numel() / j;
-			}
-			if (j == -1) {
-				j = this.numel() / i;
-			}
-		}
-
-		if (names() != null && names().length() != 0) {
-			throw new RuntimeException("Names not yet supported with named tensors");
-		}
-
-		final int finalI = i;
-		final int finalJ = j;
-
-		return toTensor(
-				performUnaryMappingOperation(new TensorOperationImpl<TensorData, Size>(torch, "view",
-						t -> t.view(finalI, finalJ), s -> torch.Size(finalI, finalJ))),
-				"view" + "Backward",
-				new TensorOperationImpl<Tensor, Size>(torch, "viewBackward", l -> viewBackward(l), s -> size()));
-
-	}
-
-	@Override
-	public Tensor view(Size size) {
-		return toTensor(
-				performUnaryMappingOperation(
-						new TensorOperationImpl<TensorData, Size>(torch, "view", t -> t.view(size), s -> size)),
-				"view" + "Backward",
-				new TensorOperationImpl<Tensor, Size>(torch, "viewBackward", l -> viewBackward(l), s -> size()));
-
-	}
-
-	private Tensor viewBackward(Tensor l) {
-		return l.view(size());
-	}
-
-	@Override
-	public Tensor add(float value) {
-		return applyScalarOperation(new ScalarAddition<>(), value);
-	}
-
-	@Override
-	public Tensor sub(float value) {
-		return applyScalarOperation(new ScalarSubtraction<>(), value);
-	}
-
-	@Override
-	public Tensor mul(Tensor other) {
-		return applyTensorOperation(new TensorMultiplication<>(torch), other);
-	}
-
-	@Override
-	public Tensor add(Tensor other) {
-		if (numel() != other.numel()) {
-			Size otherMatrixSize = other.size().asMatrixSize();
-			if (otherMatrixSize.get(0) == 1) {
-				return addRowVector(other);
-			} else if (otherMatrixSize.get(1) == 1) {
-				return addColumnVector(other);
-			} else {
-				throw new IllegalStateException("Size doesn't match");
-			}
-		} else {
-			return applyTensorOperation(new TensorAddition<>(torch), other);
-		}
-	}
-
-	protected Tensor addRowVector(Tensor other) {
-		Tensor ret = applyTensorOperation(new RowVectorAddition<>(torch), other);
-		return ret;
-	}
-
-	protected Tensor addColumnVector(Tensor other) {
-		Tensor ret = applyTensorOperation(new ColumnVectorAddition<>(torch), other);
-		return ret;
-	}
-
-	@Override
-	public Tensor div(Tensor other) {
-		return applyTensorOperation(new TensorAddition<>(torch), other);
-	}
-
-	@Override
-	public Tensor sub(Tensor other) {
-		return applyTensorOperation(new TensorSubtraction<>(torch), other);
-	}
-
-	@Override
-	public Tensor sub_(Tensor other) {
-
-		performInlineOperation(new TensorOperationImpl<>(torch, "sub_", t -> {
-			t.sub_(fromTensor(other));
-			return t;
-		}, s -> s));
-		return this;
-	}
-
-	@Override
-	public Tensor mul_(Tensor other) {
-		performInlineOperation(new TensorOperationImpl<>(torch, "mul_", t -> {
-			t.mul_(fromTensor(other));
-			return t;
-		}, s -> s));
-		return this;
-	}
-
-	@Override
-	public Tensor add_(Tensor other) {
-
-		performInlineOperation(new TensorOperationImpl<>(torch, "add_", t -> {
-			t.add_(fromTensor(other));
-			return t;
-		}, s -> s));
-		return this;
-	}
-
-	@Override
-	public Tensor t() {
-
-		return toTensor(
-				performUnaryMappingOperation(new TensorOperationImpl<>(torch, "T", t -> t.t(), s -> size().t())),
-				"TBackward", new TensorOperationImpl<>(torch, "TBackward", t -> t.t(), s -> s.t()));
+	protected Tensor addScalarVector(Tensor other) {
+		return applyBinaryTensorOperation(new TensorAddition<>(torch), other);
 	}
 	
-	@Override
-	public Tensor cloneTensor() {
-
-		return toTensor(
-				performUnaryMappingOperation(new TensorOperationImpl<>(torch, "Clone", t -> t.cloneTensor(), s -> size())),
-				"CloneBackward", new TensorOperationImpl<>(torch, "CloneBackward", t -> t, s -> s));
-	}
-
-	@Override
-	public Tensor columnSums() {
-		return toTensor(
-				performUnaryMappingOperation(new TensorOperationImpl<>(torch, "columnSums", t -> t.columnSums(),
-						s -> torch.Size(1, size().get(1)))),
-				"columnSumsBackward",
-				new TensorOperationImpl<>(torch, "columnSumsBackward", t -> torch.ones(size()).mul(t), s -> size()));
-	}
-
-	@Override
-	public Tensor rowSums() {
-		return toTensor(
-				performUnaryMappingOperation(new TensorOperationImpl<>(torch, "rowSums", t -> t.rowSums(),
-						s -> torch.Size(size().get(0), 1))),
-				"rowSumsBackward",
-				new TensorOperationImpl<>(torch, "rowSumsBackward", t -> torch.ones(size()).mul(t), s -> size()));
-	}
-
-	@Override
-	public Tensor mean() {
-		return toTensor(
-				performUnaryMappingOperation(
-						new TensorOperationImpl<>(torch, "Mean", t -> t.mean(), s -> torch.Size(1, 1))),
-				"MeanBackward", new TensorOperationImpl<>(torch, "MeanBackward",
-						g -> g.mul(torch.ones(size())).mul(1f / numel()), s -> size()));
+	protected Tensor applyInlineOperation(Consumer<TensorData> consumer) {
+		performInlineOperation(new TensorOperationImpl<TensorData, Size>(torch, "add_", 
+				toUnaryOperator(consumer),
+				s -> s));
+		return this;
 	}
 	
-	@Override
-	public Tensor norm() {
-		return toTensor(
-				performUnaryMappingOperation(
-						new TensorOperationImpl<>(torch, "Mean", t -> t.norm(), s -> size())),
-				"NormBackward", new TensorOperationImpl<>(torch, "NormBackward",
-						normBackward(), s -> size()));
+	private UnaryOperator<TensorData> toUnaryOperator(Consumer<TensorData> consumer) {
+		return t -> { consumer.accept(t); return t; };
 	}
 	
-
-	private UnaryOperator<Tensor> normBackward() {
-		return t -> { throw new UnsupportedOperationException("Not yet implemented"); };
+	public TensorOperation<Tensor, Size> createBackwardOperation(String operationName, UnaryOperator<Tensor> backPropFunction) {
+		return new TensorOperationImpl<>(torch, operationName + "Backward",
+				backPropFunction, s -> size());
+	}
+	
+	public TensorOperation<TensorData, Size> createForwardOperation(String operationName, UnaryOperator<TensorData> forwardPropFunction, UnaryOperator<Size> sizeFunction) {
+		return new TensorOperationImpl<>(torch, operationName,
+				forwardPropFunction, sizeFunction);
+	}
+	
+	protected Tensor applyUnaryTensorOperation(String operationName, 
+			UnaryOperator<TensorData> forwardPropFunction, 
+			UnaryOperator<Size> sizeFunction, 
+			UnaryOperator<Tensor> backPropFunction) {
+			return toTensor(
+					performUnaryMappingOperation(
+							createForwardOperation(operationName, forwardPropFunction, sizeFunction)),
+						operationName + "Backward", 
+							createBackwardOperation(operationName, backPropFunction));
 	}
 
-	@Override
-	public Tensor sum() {
-		return toTensor(
-				performUnaryMappingOperation(
-						new TensorOperationImpl<>(torch, "Sum", t -> t.sum(), s -> torch.Size(1, 1))),
-				"SumBackward",
-				new TensorOperationImpl<>(torch, "SumBackward", g -> g.mul(torch.ones(size())), s -> size()));
-	}
-
-	@Override
-	public Tensor matmul(Tensor other) {
-		return applyTensorOperation(new TensorMatrixMultiplication<>(torch), other);
-	}
-
-	private Tensor applyTensorOperation(DifferentiableTensorTensorFunction<TensorData> tensorOperation, Tensor other) {
+	protected Tensor applyBinaryTensorOperation(DifferentiableTensorTensorFunction<TensorData> tensorOperation, Tensor other) {
 
 		UnaryOperator<TensorData> forwardPropFunction = tensorOperation.forwardPropFunction(fromTensor(other));
 
@@ -368,26 +196,31 @@ public class TensorBase extends PythonClass<Tensor> implements Tensor {
 		UnaryOperator<Size> sizeFunction = tensorOperation.sizeFunction(new ImmutablePair<>(size(), other.size()));
 
 		if (other.requires_grad()) {
+			pre_operation_requires_grad = this.requires_grad;; 
+			//boolean original = this.requires_grad;
 			this.requires_grad_(true);
-			return toTensor(
-					performUnaryMappingOperation(new TensorOperationImpl<>(torch, tensorOperation.name(),
-							forwardPropFunction, sizeFunction)),
-					tensorOperation.name() + "Backward", Arrays.asList(this, other),
-					Arrays.asList(
-							new TensorOperationImpl<>(torch, tensorOperation.name() + "Backward",
-									backPropFunctions.getLeft(), s -> size()),
-							new TensorOperationImpl<>(torch, tensorOperation.name() + "Backward",
-									backPropFunctions.getRight(), s -> other.size())));
+			Tensor ret = toTensor(
+					performUnaryMappingOperation(
+							createForwardOperation(tensorOperation.name(), forwardPropFunction, sizeFunction)),
+							tensorOperation.name() + "Backward", Arrays.asList(this, other),
+							Arrays.asList(
+									createBackwardOperation(tensorOperation.name(), backPropFunctions.getLeft()),
+									other.createBackwardOperation(tensorOperation.name(), backPropFunctions.getRight())
+									)
+							);
+			
+			this.requires_grad_(pre_operation_requires_grad);
+			return ret;
 		} else {
 			return toTensor(
-					performUnaryMappingOperation(new TensorOperationImpl<>(torch, tensorOperation.name(),
-							forwardPropFunction, sizeFunction)),
-					tensorOperation.name() + "Backward", new TensorOperationImpl<>(torch,
-							tensorOperation.name() + "Backward", backPropFunctions.getLeft(), s -> s));
+					performUnaryMappingOperation(
+							createForwardOperation(tensorOperation.name(), forwardPropFunction, sizeFunction)),
+							tensorOperation.name() + "Backward", 
+							createBackwardOperation(tensorOperation.name(), backPropFunctions.getLeft()));
 		}
 	}
 
-	private Tensor applyScalarOperation(DifferentiableTensorScalarFunction<TensorData> tensorOperation, float scalar) {
+	protected Tensor applyScalarOperation(DifferentiableTensorScalarFunction<TensorData> tensorOperation, float scalar) {
 
 		UnaryOperator<TensorData> forwardPropFunction = tensorOperation.forwardPropFunction(scalar);
 
@@ -395,9 +228,9 @@ public class TensorBase extends PythonClass<Tensor> implements Tensor {
 
 		return toTensor(
 				performUnaryMappingOperation(
-						new TensorOperationImpl<>(torch, tensorOperation.name(), forwardPropFunction, s -> s)),
+						createForwardOperation(tensorOperation.name(), forwardPropFunction, s -> s)),
 				tensorOperation.name() + "Backward",
-				new TensorOperationImpl<>(torch, tensorOperation.name() + "Backward", backPropFunction, s -> s));
+				createBackwardOperation(tensorOperation.name(), backPropFunction));
 
 	}
 
@@ -405,6 +238,8 @@ public class TensorBase extends PythonClass<Tensor> implements Tensor {
 	public int numel() {
 		return Math.max(Arrays.stream(symbolicTensor.size().dimensions()).reduce(1, (a, b) -> a * b), 1);
 	}
+	
+	protected abstract Tensor createDefaultTensor(Torch torch, SymbolicTensor<TensorData, Size> tensor);
 
 	protected Tensor toTensor(SymbolicTensor<TensorData, Size> tensor, String name,
 			TensorOperation<Tensor, Size> operation) {
@@ -455,7 +290,7 @@ public class TensorBase extends PythonClass<Tensor> implements Tensor {
 	protected Tensor toTensor(SymbolicTensor<TensorData, Size> tensor, String name, List<Tensor> tensors,
 			List<TensorOperation<Tensor, Size>> operations) {
 		boolean create_graph = tensors.stream().anyMatch(t -> t.create_graph());
-		if (this.requires_grad()) {
+		if (requires_grad) {
 			Tensor t = createDefaultTensor(torch, tensor).withNextFunctions(name, operations,
 					getGradFunctionTuples(tensors));
 
@@ -474,7 +309,6 @@ public class TensorBase extends PythonClass<Tensor> implements Tensor {
 			if (other.size().getComponents().length > 2) {
 				throw new IllegalArgumentException("More than 2 dimensions");
 			}
-
 			return other.toTensorData();
 		}
 	}
@@ -498,6 +332,23 @@ public class TensorBase extends PythonClass<Tensor> implements Tensor {
 		return new SymbolicTensorAdapter<TensorData, Size>(tensor, tensor.size());
 	}
 	
+	protected Tensor apply(Tensor other, DifferentiableTensorTensorFunction<TensorData> rowVectorOperation,
+			DifferentiableTensorTensorFunction<TensorData> columnVectorOperation,
+			DifferentiableTensorTensorFunction<TensorData> tensorOperation) {
+		if (numel() != other.numel() && other.numel() != 1 && this.numel() != 1) {
+			Size otherMatrixSize = other.size().asMatrixSize();
+			if (otherMatrixSize.get(0) == 1) {
+				return applyBinaryTensorOperation(rowVectorOperation, other);
+			} else if (otherMatrixSize.get(1) == 1) {
+				return applyBinaryTensorOperation(columnVectorOperation, other);
+			} else {
+				throw new IllegalStateException("Size doesn't match");
+			}
+		} else {
+			return applyBinaryTensorOperation(tensorOperation, other);
+		}
+	}
+	
 	@Override
 	public void backward(Tensor gradient, boolean create_graph) {
 		if (gradient == null) {
@@ -509,7 +360,7 @@ public class TensorBase extends PythonClass<Tensor> implements Tensor {
 		} else {
 			if (this.names() != null && this.names().length() > 0) {
 				if (gradient.names() == null || gradient.names().length() == 0) {
-					throw new IllegalArgumentException("Gradient names must not be null");
+					throw new IllegalArgumentException("Gradient names must not be null - should be " + this.names());
 				} else {
 					if (!SizeMatcher.isSizeMatch(this.size(), gradient.size())) {
 						throw new IllegalArgumentException(
@@ -524,9 +375,6 @@ public class TensorBase extends PythonClass<Tensor> implements Tensor {
 
 	@Override
 	public void backward(Tensor gradient) {
-		if (!this.requires_grad() && this.grad_fn() == null) {
-			throw new IllegalStateException("Tensor does not require grad and does not have a grad_fn");
-		}
 		
 		backward(gradient, create_graph);
 	}
@@ -536,11 +384,15 @@ public class TensorBase extends PythonClass<Tensor> implements Tensor {
 		if (back == null) {
 			throw new RuntimeException("backwardRecursive input tensor cannot be null");
 		} else {
-			if (this.names() != null && this.names().length() > 0) {
+			if (back.size().dimensions().length > 0 && this.names() != null && this.names().length() > 0) {
 				if (back.names() == null || back.names().length() == 0) {
-					throw new IllegalArgumentException("backwardRecursive input tensor names must not be null");
+					throw new IllegalArgumentException("backwardRecursive input tensor names must not be null - should be:" + this.names());
 				}
 			}
+		}
+		
+		if ((pre_operation_requires_grad == null || pre_operation_requires_grad.booleanValue()) && !this.requires_grad() && this.grad_fn() == null) {
+			throw new IllegalStateException("Tensor does not require grad and does not have a grad_fn");
 		}
 
 		if (gf != null) {
@@ -565,12 +417,13 @@ public class TensorBase extends PythonClass<Tensor> implements Tensor {
 				Tensor target = gf.variable();
 				if (target != null) {
 					
-					if (!SizeMatcher.isSizeMatch(target.size(), back.size())) {
+					
+					if (target.numel() != back.numel() && !SizeMatcher.isSizeMatch(target.size(), back.size())) {
 						throw new IllegalArgumentException(
 								"Dimension names don't match:" + target.names() + " vs " + back.names());
 					}
 				
-					if (target.grad() == null) {
+					if (target.grad() == null && target.requires_grad()) {
 						if (create_graph) {
 							var accumulated = torch.zeros(back.size())
 									.requires_grad_(true).add(back);
@@ -584,7 +437,7 @@ public class TensorBase extends PythonClass<Tensor> implements Tensor {
 							target.grad_(accumulated);
 						}
 						
-					}  else {
+					}  else if (target.requires_grad()){
 						if (create_graph) {
 	
 							var accumulated = target.grad().add(back);

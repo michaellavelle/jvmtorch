@@ -17,7 +17,7 @@ public abstract class TorchImpl<T extends TensorOperations<T>> implements Torch 
 
 	@Override
 	public Tensor tensor(float value) {
-		return new ScalarImpl(this, "scalar","scalar", value);
+		return new ScalarImpl(this, value);
 	}
 
 	@Override

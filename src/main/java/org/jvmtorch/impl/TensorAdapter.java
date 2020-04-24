@@ -14,6 +14,7 @@
 package org.jvmtorch.impl;
 
 import java.util.List;
+import java.util.function.UnaryOperator;
 
 import org.jvmpy.python.Tuple;
 import org.jvmtorch.torch.GradFunction;
@@ -168,12 +169,7 @@ public class TensorAdapter implements Tensor {
 			TensorOperation<TensorData, Size> operation, TensorOperation<Tensor, Size> backwardOp) {
 		return adapted.performUnaryMappingOperation( operation, backwardOp);
 	}
-
-	@Override
-	public Tensor view(int i, int num_flat_features) {
-		return adapted.view(i, num_flat_features);
-	}
-
+	
 	@Override
 	public Tuple<String> names() {
 		return adapted.names();
@@ -265,5 +261,11 @@ public class TensorAdapter implements Tensor {
 	@Override
 	public void backward(Tensor gradient, boolean create_graph) {
 		adapted.backward(gradient, create_graph);
+	}
+
+	@Override
+	public TensorOperation<Tensor, Size> createBackwardOperation(String operationName,
+			UnaryOperator<Tensor> backPropFunction) {
+		return adapted.createBackwardOperation(operationName, backPropFunction);
 	}
 }
